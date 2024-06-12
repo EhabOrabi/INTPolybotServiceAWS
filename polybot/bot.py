@@ -1,8 +1,14 @@
+import json
+
+import boto3
+import requests
 import telebot
 from loguru import logger
 import os
 import time
 from telebot.types import InputFile
+
+from polybot.img_proc import Img
 
 
 class Bot:
@@ -67,11 +73,121 @@ class Bot:
 
 class ObjectDetectionBot(Bot):
     def handle_message(self, msg):
-        logger.info(f'Incoming message: {msg}')
+        """Bot Main message handler"""
+        # logger.info(f'Incoming message: {msg}')
+        if "text" in msg:
+            self.send_text(msg['chat']['id'], f'Your original message: {msg["text"]}')
+        else:
+            # if there is checkbox caption
+            if "caption" in msg:
+                try:
+                    img_path = self.download_user_photo(msg)
+                    if msg["caption"] == "Blur":
+                        # Send message to telegram bot
+                        self.send_text(msg['chat']['id'], "Blur filter in progress")
+                        new_img = Img(img_path)
+                        new_img.blur()
+                        new_path = new_img.save_img()
+                        self.send_photo(msg["chat"]["id"], new_path)
+                        self.send_text(msg['chat']['id'], "Blur filter applied")
+                    elif msg["caption"] == "Contour":
+                        self.send_text(msg['chat']['id'], "Contour filter in progress")
+                        new_img = Img(img_path)
+                        new_img.contour()
+                        new_path = new_img.save_img()
+                        self.send_photo(msg["chat"]["id"], new_path)
+                        self.send_text(msg['chat']['id'], "Contour filter applied")
+                    elif msg["caption"] == "Salt and pepper":  # concat, segment
+                        self.send_text(msg['chat']['id'], "salt_n_pepper filter in progress")
+                        new_img = Img(img_path)
+                        new_img.salt_n_pepper()
+                        new_path = new_img.save_img()
+                        self.send_photo(msg["chat"]["id"], new_path)
+                        self.send_text(msg['chat']['id'], "salt_n_pepper filter applied")
+                    elif msg["caption"] == "mix":
+                        self.send_text(msg['chat']['id'], "mix filter in progress")
+                        new_img = Img(img_path)
+                        new_img.salt_n_pepper()
+                        new_path = new_img.save_img()
 
-        if self.is_current_msg_photo(msg):
-            photo_path = self.download_user_photo(msg)
+                        new_img2 = Img(new_path)
+                        new_img2.blur()
+                        new_path = new_img2.save_img()
 
-            # TODO upload the photo to S3
-            # TODO send a job to the SQS queue
-            # TODO send message to the Telegram end-user (e.g. Your image is being processed. Please wait...)
+                        self.send_photo(msg["chat"]["id"], new_path)
+                        self.send_text(msg['chat']['id'], "mix filter applied")
+                    elif msg["caption"] == "predict":
+                        # TODO send message to the Telegram end-user (e.g. Your image is being processed. Please wait...)
+                        self.send_text(msg['chat']['id'], "Processing image detection by yolo5")
+                        logger.info(f'Photo downloaded to: {img_path}')
+                        photo_s3_name = img_path.split("/")
+                        # TODO upload the photo to S3
+                        # Get the bucket name from the environment variable
+                        images_bucket = os.environ['BUCKET_NAME']
+                        client = boto3.client('s3')
+                        client.upload_file(img_path, images_bucket, photo_s3_name[1])
+
+                        # Send an HTTP request to the YOLO5 service for prediction
+                        yolo5_url = "http://yolo5_app:8081/predict"
+                        headers = {'Content-Type': 'application/json'}
+                        # image_filename = img_path
+                        # json_data = {'imgName': image_filename}
+
+                        try:
+                            # TODO send a job to the SQS queue
+                            sqs = boto3.client('sqs', region_name='eu-west-3')
+                            sqs_queue_url = 'https://sqs.eu-west-3.amazonaws.com/019273956931/ehabo-PolybotService-Queue'
+
+                            response = sqs.send_message(
+                                QueueUrl=sqs_queue_url,
+                                MessageBody=json.dumps({'imgName': img_path})
+                            )
+                            self.send_text(msg.chat.id, f"Job sent to queue. MessageId: {response['MessageId']}")
+
+                            receive_response = sqs.receive_message(
+                                QueueUrl=sqs_queue_url,
+                                MaxNumberOfMessages=1,
+                                WaitTimeSeconds=10  # Wait time for long polling
+                            )
+
+                            if 'Messages' in receive_response:
+                                message = receive_response['Messages'][0]
+                                receipt_handle = message['ReceiptHandle']
+                                body_from_q = json.loads(message['Body'])
+                                # TODO send an HTTP request to the `yolo5` service for prediction
+                                # Send an HTTP POST request to the YOLO5 service
+                                response = requests.post(yolo5_url, headers=headers, json=body_from_q)
+                                # Logging the status code for debugging
+                                logger.info(f"Response status code: {response.status_code}")
+
+                                # Check the response status code
+                                # TODO send the returned results to the Telegram end-user
+                                if response.status_code == 200:
+                                    response_data = json.loads(response.text)
+                                    logger.info(response_data)
+                                    for key, value in response_data.items():
+                                        message = f"{key}: {value}"
+                                        self.send_text(msg['chat']['id'], message)
+
+                                # Delete the message from the queue after processing
+                                sqs.delete_message(
+                                    QueueUrl=sqs_queue_url,
+                                    ReceiptHandle=receipt_handle
+                                )
+                            else:
+                                self.send_text(msg['chat']['id'], "No messages available in the queue.")
+
+                            logger.info("Prediction request sent successfully.")
+                        except requests.Timeout:
+                            self.send_text(msg['chat']['id'], "Request timed out. Please try again later.")
+                        except Exception as e:
+                            logger.info(f"Error {e}")
+                            logger.error('Error sending prediction request:', exc_info=True)
+                            self.send_text(msg['chat']['id'], "Error sending prediction request")
+                    else:
+                        self.send_text(msg['chat']['id'],"Error invalid caption\n Available captions are :\n 1)Blur\n2)mix\n3)Salt and pepper\n 4)predict")
+                except Exception as e:
+                    logger.info(f"Error {e}")
+                    self.send_text(msg['chat']['id'], f'failed - try again later')
+            else:
+                self.send_text(msg['chat']['id'], "please provide caption")

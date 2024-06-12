@@ -1,3 +1,4 @@
+import json
 import time
 from pathlib import Path
 from detect import run
@@ -76,6 +77,35 @@ def consume():
                     'labels': labels,
                     'time': time.time()
                 }
+
+                try:
+                    # TODO , need to remove Mongo and work with DynamoDB
+                    logger.info("Connecting to MongoDB...")
+                    connection_string = f"mongodb://mongo_1:27017/"
+                    logger.info(f"Connection string: {connection_string}")
+                    client = MongoClient(connection_string)
+                    logger.info("MongoClient connected successfully.")
+                    db = client['mydatabase']
+                    collection_name = 'prediction'
+                    collection = db['prediction']
+                    logger.info("Inserting data...")
+                    collection.insert_one(prediction_summary)
+                    logger.info("Data inserted successfully.")
+                    doc = collection.find_one({})
+                    json_doc = json.dumps(doc, default=json_util.default)
+                    class_counts = {}
+                    for label in labels:
+                        class_name = label['class']
+                        if class_name in class_counts:
+                            class_counts[class_name] += 1
+                        else:
+                            class_counts[class_name] = 1
+                    # Create a dictionary with class names and counts
+                    class_counts_json = {class_name: count for class_name, count in class_counts.items()}
+                    # Convert the dictionary to JSON
+                    class_counts_json_str = json.dumps(class_counts_json)
+                    # Return the JSON object
+                    return class_counts_json
 
                 # TODO store the prediction_summary in a DynamoDB table
                 # TODO perform a GET request to Polybot to `/results` endpoint
