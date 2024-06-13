@@ -25,6 +25,9 @@ class Bot:
         # set the webhook URL
         self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
 
+        with open("YOURPUBLIC.pem", 'rb') as cert:
+            self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', certificate=cert, timeout=60)
+
         logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
 
     def send_text(self, chat_id, text):
