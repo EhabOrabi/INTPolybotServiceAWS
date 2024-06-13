@@ -38,10 +38,6 @@ def get_secret():
     return json.loads(secret)
 
 
-TELEGRAM_TOKEN = get_secret()  # need to get the value by get method from json
-TELEGRAM_APP_URL = "https://ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
-
-
 @app.route('/', methods=['GET'])
 def index():
     return 'Ok'
@@ -94,6 +90,8 @@ def load_test():
 
 
 if __name__ == "__main__":
+    TELEGRAM_TOKEN = get_secret()  # need to get the value by get method from json
+    TELEGRAM_APP_URL = "https://ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
     bot = ObjectDetectionBot(TELEGRAM_TOKEN, TELEGRAM_APP_URL)
 
     app.run(host='0.0.0.0', port=8443)
