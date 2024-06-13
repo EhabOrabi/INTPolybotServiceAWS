@@ -1,7 +1,7 @@
 import json
 import flask
 from flask import request
-from polybot.bot import ObjectDetectionBot
+from bot import ObjectDetectionBot
 import boto3
 from botocore.exceptions import ClientError
 
