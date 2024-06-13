@@ -1,8 +1,6 @@
 import json
-
 import flask
 from flask import request
-import os
 from bot import ObjectDetectionBot
 import boto3
 from botocore.exceptions import ClientError
@@ -40,7 +38,7 @@ def get_secret():
 
 
 TELEGRAM_TOKEN = get_secret()  # need to get the value by get method from json
-TELEGRAM_APP_URL = "ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
+TELEGRAM_APP_URL = "https://ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
 
 
 @app.route('/', methods=['GET'])
