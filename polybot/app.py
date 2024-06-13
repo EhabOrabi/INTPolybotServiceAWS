@@ -40,7 +40,7 @@ def get_secret():
 
 
 TELEGRAM_TOKEN = get_secret()  # need to get the value by get method from json
-TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
+TELEGRAM_APP_URL = "ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
 
 
 @app.route('/', methods=['GET'])
