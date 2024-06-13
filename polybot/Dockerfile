@@ -1,7 +1,12 @@
-FROM python:3.9-slim
+FROM python:3.10-alpine
 WORKDIR /usr/src/app
-RUN pip install --upgrade pip
 COPY requirements.txt .
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
 COPY . .
+
 CMD ["python3", "app.py"]
+
+
+
