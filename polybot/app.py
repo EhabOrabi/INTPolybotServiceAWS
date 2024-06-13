@@ -1,5 +1,4 @@
 import json
-
 import boto3
 import flask
 from botocore.exceptions import ClientError
@@ -10,6 +9,7 @@ app = flask.Flask(__name__)
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-west-3')
 table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
+
 
 # TODO load TELEGRAM_TOKEN value from Secret Manager
 
@@ -35,7 +35,16 @@ def get_secret():
         raise e
 
     secret = get_secret_value_response['SecretString']
-    return json.loads(secret)
+    return secret
+
+
+secret_json_str = get_secret()
+if secret_json_str:
+    secret_dict = json.loads(secret_json_str)
+    TELEGRAM_TOKEN = secret_dict.get('TELEGRAM_BOT_TOKEN')
+else:
+    print("Failed to retrieve the secret")
+TELEGRAM_APP_URL = "https://ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
 
 
 @app.route('/', methods=['GET'])
@@ -90,8 +99,6 @@ def load_test():
 
 
 if __name__ == "__main__":
-    TELEGRAM_TOKEN = get_secret()  # need to get the value by get method from json
-    TELEGRAM_APP_URL = "https://ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
     bot = ObjectDetectionBot(TELEGRAM_TOKEN, TELEGRAM_APP_URL)
 
     app.run(host='0.0.0.0', port=8443)
