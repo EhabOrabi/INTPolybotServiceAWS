@@ -1,9 +1,7 @@
-import json
 import flask
 from flask import request
-from bot import ObjectDetectionBot
-import boto3
-from botocore.exceptions import ClientError
+import os
+from bot import Bot, ObjectDetectionBot
 
 app = flask.Flask(__name__)
 
