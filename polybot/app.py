@@ -5,7 +5,7 @@ from bot import ObjectDetectionBot
 
 app = flask.Flask(__name__)
 
-dynamodb = boto3.resource('ehabo-PolybotService-DynamoDB', region_name='eu-west-3')
+dynamodb = boto3.resource('dynamodb', region_name='eu-west-3')
 table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
 
 # TODO load TELEGRAM_TOKEN value from Secret Manager
