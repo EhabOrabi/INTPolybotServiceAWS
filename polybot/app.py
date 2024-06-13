@@ -1,5 +1,8 @@
+import json
+
 import boto3
 import flask
+from botocore.exceptions import ClientError
 from flask import request
 from bot import ObjectDetectionBot
 
