@@ -6,6 +6,8 @@ RUN pip install -r requirements.txt
 
 COPY . .
 ENV TELEGRAM_APP_URL="https://ehabo-polybot.int-devops.click"
+ENV BUCKET_NAME="ehaborabi-bucket"
+ENV REGION_NAME="eu-west-3"
 CMD ["python3", "app.py"]
 
 

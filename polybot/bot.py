@@ -9,7 +9,6 @@ from img_proc import Img
 import boto3
 
 
-
 class Bot:
 
     def __init__(self, token, telegram_chat_url):
@@ -124,6 +123,7 @@ class ObjectDetectionBot(Bot):
                         # TODO upload the photo to S3
                         # Get the bucket name from the environment variable
                         images_bucket = os.environ['BUCKET_NAME']
+                        region_name = os.environ['REGION_NAME']
                         client = boto3.client('s3')
                         client.upload_file(img_path, images_bucket, photo_s3_name[1])
 
@@ -135,7 +135,7 @@ class ObjectDetectionBot(Bot):
 
                         try:
                             # TODO send a job to the SQS queue
-                            sqs = boto3.client('sqs', region_name='eu-west-3')
+                            sqs = boto3.client('sqs', region_name=region_name)
                             sqs_queue_url = 'https://sqs.eu-west-3.amazonaws.com/019273956931/ehabo-PolybotService-Queue'
 
                             response = sqs.send_message(
