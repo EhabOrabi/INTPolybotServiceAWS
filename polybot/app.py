@@ -51,7 +51,7 @@ TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
 logger.info(TELEGRAM_APP_URL)
 
 
-@app.route('/health_checks/', methods=['GET'])
+@app.route('/health_check', methods=['GET'])
 def health_checks():
     return 'Ok', 200
 
