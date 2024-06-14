@@ -7,7 +7,7 @@ import time
 from telebot.types import InputFile
 from img_proc import Img
 import boto3
-import logging
+
 
 
 class Bot:
