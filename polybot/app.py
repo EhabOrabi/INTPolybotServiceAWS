@@ -44,7 +44,8 @@ if secret_json_str:
     TELEGRAM_TOKEN = secret_dict.get('TELEGRAM_BOT_TOKEN')
 else:
     print("Failed to retrieve the secret")
-TELEGRAM_APP_URL = "https://ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
+# TELEGRAM_APP_URL = "https://ehabo-PolybotService-lb-1648832162.eu-west-3.elb.amazonaws.com"
+TELEGRAM_APP_URL = "ehabo-polybot.int-devops.click"
 
 
 @app.route('/', methods=['GET'])
