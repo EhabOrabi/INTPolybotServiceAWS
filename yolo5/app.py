@@ -5,12 +5,13 @@ from pathlib import Path
 import requests
 from detect import run
 import yaml
+from flask import Flask
 from loguru import logger
 import os
 import boto3
 
 images_bucket = os.environ['BUCKET_NAME']
-queue_name = os.environ['SQS_QUEUE_NAME']
+queue_url = os.environ['SQS_QUEUE_URL']
 region_name = os.environ['REGION_NAME']
 
 sqs_client = boto3.client('sqs', region_name=region_name)
@@ -18,12 +19,15 @@ sqs_client = boto3.client('sqs', region_name=region_name)
 with open("data/coco128.yaml", "r") as stream:
     names = yaml.safe_load(stream)['names']
 
+app = Flask(__name__)
 
-def consume():
+
+@app.route('/predict', methods=['POST'])
+def predict():
     # The function runs in an infinite loop, continually polling the SQS queue for new messages.
     while True:
         # Receive Message from SQS
-        response = sqs_client.receive_message(QueueUrl=queue_name, MaxNumberOfMessages=1, WaitTimeSeconds=5)
+        response = sqs_client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=1, WaitTimeSeconds=5)
         # Check for Messages:
         if 'Messages' in response:
             # Extract message details
@@ -38,7 +42,7 @@ def consume():
             img_name = message.get('imgName')
             if not img_name or not chat_id:
                 logger.error('Invalid message format: chat_id or imgName missing')
-                sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
+                sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
                 continue
 
             logger.info(f'img_name received: {img_name}')
@@ -110,12 +114,12 @@ def consume():
                             f'Error: GET request to Polybot /results endpoint failed with status code {response.status_code}')
             else:
                 logger.error(f'Prediction: {prediction_id}/{original_img_path}. prediction result not found')
-                sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
+                sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
                 continue
 
             # Delete the message from the queue as the job is considered as DONE
-            sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
+            sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
 
 
 if __name__ == "__main__":
-    consume()
+    app.run(host='0.0.0.0', port=8081, debug=True)

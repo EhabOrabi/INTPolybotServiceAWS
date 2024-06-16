@@ -136,7 +136,7 @@ class ObjectDetectionBot(Bot):
                         try:
                             # TODO send a job to the SQS queue
                             sqs = boto3.client('sqs', region_name=region_name)
-                            sqs_queue_url = 'https://sqs.eu-west-3.amazonaws.com/019273956931/ehabo-PolybotService-Queue'
+                            sqs_queue_url = os.environ['SQS_QUEUE_URL']
 
                             response = sqs.send_message(
                                 QueueUrl=sqs_queue_url,

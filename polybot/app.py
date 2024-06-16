@@ -48,7 +48,8 @@ else:
     print("Failed to retrieve the secret")
 
 TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
-logger.info(TELEGRAM_APP_URL)
+
+# logger.info(TELEGRAM_APP_URL)
 
 
 @app.route('/health_check', methods=['GET'])
