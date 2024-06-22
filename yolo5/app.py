@@ -1,6 +1,7 @@
 import json
 import time
 import uuid
+from decimal import Decimal
 from pathlib import Path
 import requests
 from detect import run
@@ -19,11 +20,8 @@ sqs_client = boto3.client('sqs', region_name=region_name)
 with open("data/coco128.yaml", "r") as stream:
     names = yaml.safe_load(stream)['names']
 
-app = Flask(__name__)
 
-
-@app.route('/predict', methods=['POST'])
-def predict():
+def consume():
     # The function runs in an infinite loop, continually polling the SQS queue for new messages.
     while True:
         # Receive Message from SQS
@@ -54,8 +52,7 @@ def predict():
             s3_client.download_file(images_bucket, photo_s3_name[1], file_path_pic_download)
 
             original_img_path = file_path_pic_download
-            logger.info(f'Prediction: {prediction_id}/{original_img_path}. Download img completed')
-            # Run YOLOv5 Object Detection
+            logger.info(f'Prediction: {prediction_id}{original_img_path}. Download img completed')
             # Predicts the objects in the image
             run(
                 weights='yolov5s.pt',
@@ -66,54 +63,66 @@ def predict():
                 save_txt=True
             )
 
-            logger.info(f'Prediction: {prediction_id}/{original_img_path}. done')
+            logger.info(f'prediction: {prediction_id}/{original_img_path}. done')
 
-            # Path for the predicted image with labels
-            predicted_img_path = Path(f'static/data/{prediction_id}/{photo_s3_name[1]}')
-            predicted_img_path.parent.mkdir(parents=True, exist_ok=True)
-
+            # This is the path for the predicted image with labels
+            # The predicted image typically includes bounding boxes drawn around the detected objects, along with class labels and possibly confidence scores.
+            # predicted_img_path = Path('static') / 'data' / prediction_id / Path(original_img_path).name
+            predicted_img_path = Path(f'static/data/{prediction_id}/{str(photo_s3_name[1])}')
+            logger.info(f'predicted_img_path: {predicted_img_path}.')
             # Upload predicted image to S3
             unique_filename = str(uuid.uuid4()) + '.jpeg'
             s3_client.upload_file(str(predicted_img_path), images_bucket, unique_filename)
-
+            logger.info("upload to s3.")
             # Parse prediction labels and create a summary
             pred_summary_path = Path(f'static/data/{prediction_id}/labels/{photo_s3_name[1].split(".")[0]}.txt')
+            logger.info(f'pred_summary_path: {pred_summary_path}.')
             if pred_summary_path.exists():
                 with open(pred_summary_path) as f:
                     labels = f.read().splitlines()
                     labels = [line.split(' ') for line in labels]
                     labels = [{
                         'class': names[int(l[0])],
-                        'cx': float(l[1]),
-                        'cy': float(l[2]),
-                        'width': float(l[3]),
-                        'height': float(l[4]),
+                        'cx': Decimal(l[1]),
+                        'cy': Decimal(l[2]),
+                        'width': Decimal(l[3]),
+                        'height': Decimal(l[4]),
                     } for l in labels]
-                    logger.info(f'Prediction: {prediction_id}/{photo_s3_name[1]}. prediction summary:\n\n{labels}')
-                    prediction_summary = {
-                        'prediction_id': prediction_id,
-                        'original_img_path': photo_s3_name[1],
-                        'predicted_img_path': unique_filename,
-                        'labels': labels,
-                        'time': time.time()
-                    }
 
-                    # Store the prediction_summary in a DynamoDB table
-                    dynamodb = boto3.resource('dynamodb', region_name='eu-west-3')
-                    table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
-                    table.put_item(Item=prediction_summary)
+                logger.info(f'prediction: {prediction_id}/{original_img_path}. prediction summary:\n\n{labels}')
+                chat_id = str(chat_id)  # Convert chat_id to string
+                prediction_summary = {
+                    'prediction_id': prediction_id,
+                    'chat_id': chat_id,
+                    'original_img_path': original_img_path,
+                    'predicted_img_path': str(predicted_img_path),
+                    'labels': labels,
+                    'unique_filename': unique_filename,
+                    'time': Decimal(time.time())
+                }
+                # TODO store the prediction_summary in a DynamoDB table
+                # TODO perform a GET request to Polybot to `/results` endpoint
+                # Store the prediction_summary in a DynamoDB table
+                dynamodb = boto3.resource('dynamodb', region_name='eu-west-3')
+                logger.info({dynamodb})
+                table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
+                logger.info({table})
+                table.put_item(Item=prediction_summary)
 
-                    # Notify Polybot of Results
-                    polybot_url = 'http://polybot-url/results'
-                    response = requests.get(polybot_url, params={
-                        'predictionId': json.dumps({'chat_id': chat_id, 'prediction_id': prediction_id})})
-                    if response.status_code == 200:
-                        logger.info('GET request to Polybot /results endpoint successful')
-                    else:
-                        logger.error(
-                            f'Error: GET request to Polybot /results endpoint failed with status code {response.status_code}')
+                # Send the message from my yolo5 to load balancer:
+                polybot_url = 'https://ehabo.int-devops.click/results'
+                try:
+                    response = requests.post(f'{polybot_url}', params={'predictionId': prediction_id})
+                    response.raise_for_status()  # Raise an error for bad status codes
+                    logger.info(f'prediction: {prediction_id}. Notified Polybot microservice successfully')
+                except requests.exceptions.RequestException as e:
+                    logger.error(f'prediction: {prediction_id}. Failed to notify Polybot microservice. Error: {str(e)}')
+                    if response is not None:
+                        logger.error(f'Response status code: {response.status_code}')
+                        logger.error(f'Response text: {response.text}')
+
             else:
-                logger.error(f'Prediction: {prediction_id}/{original_img_path}. prediction result not found')
+                logger.error(f'Prediction: {prediction_id}{original_img_path}. prediction result not found')
                 sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
                 continue
 
@@ -122,4 +131,4 @@ def predict():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8081, debug=True)
+    consume()

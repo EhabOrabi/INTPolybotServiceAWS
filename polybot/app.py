@@ -49,8 +49,6 @@ else:
 
 TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
 
-# logger.info(TELEGRAM_APP_URL)
-
 
 @app.route('/health_check', methods=['GET'])
 def health_checks():
@@ -73,32 +71,34 @@ def webhook():
 def results():
     # TODO use the prediction_id to retrieve results from DynamoDB and send to the end-user
 
-    prediction_id = request.args.get('predictionId')
-    # Extract chat_id from prediction_id (assuming prediction_id is JSON string)
+    logger.info("Received request at /results endpoint")
     try:
-        prediction_data = json.loads(prediction_id)
-        chat_id = prediction_data.get("chat_id")
-        if not chat_id:
-            return 'Invalid chat_id', 400
-    except json.JSONDecodeError:
-        return 'Invalid predictionId format', 400
+        prediction_id = flask.request.args.get('predictionId')
+        if not prediction_id:
+            prediction_id = flask.request.json.get('predictionId')
 
-    # Retrieve results from DynamoDB
-    try:
-        response = table.get_item(Key={'predictionId': prediction_id})
-        item = response.get('Item')
-        if not item:
-            return 'No results found for the given predictionId', 404
+        if not prediction_id:
+            return 'predictionId is required', 400
 
-        text_results = item.get('results')  # Replace 'results' with the actual attribute name
-        if not text_results:
-            return 'No results found in the item', 404
+        response = table.get_item(Key={'prediction_id': prediction_id})
+        if 'Item' in response:
+            item = response['Item']
+            chat_id = item['chat_id']
+            labels = item['labels']
+            unique_filename = item['unique_filename']
+
+            text_results = f"Prediction results for image {item['original_img_path']}:\n"
+            for label in labels:
+                text_results += f"- {label['class']} at ({label['cx']:.2f}, {label['cy']:.2f}) with size ({label['width']:.2f}, {label['height']:.2f})\n"
+
+            bot.send_text(chat_id, text_results)
+
+            return 'Ok'
+        else:
+            return 'No results found', 404
     except Exception as e:
-        return f'Error retrieving results: {str(e)}', 500
-
-    # Send results to the end-user
-    bot.send_text(chat_id, text_results)
-    return 'Ok'
+        print(f"Error processing results: {str(e)}")
+        return 'Error', 500
 
 
 @app.route(f'/loadTest/', methods=['POST'])
@@ -110,5 +110,4 @@ def load_test():
 
 if __name__ == "__main__":
     bot = ObjectDetectionBot(TELEGRAM_TOKEN, TELEGRAM_APP_URL)
-
     app.run(host='0.0.0.0', port=8443)

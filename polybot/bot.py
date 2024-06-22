@@ -1,4 +1,6 @@
 import json
+import uuid
+
 import requests
 import telebot
 from loguru import logger
@@ -115,79 +117,45 @@ class ObjectDetectionBot(Bot):
 
                         self.send_photo(msg["chat"]["id"], new_path)
                         self.send_text(msg['chat']['id'], "mix filter applied")
+
                     elif msg["caption"] == "predict":
-                        # TODO send message to the Telegram end-user (e.g. Your image is being processed. Please wait...)
-                        self.send_text(msg['chat']['id'], "Processing image detection by yolo5")
+                        self.send_text(msg['chat']['id'], "Your image is being processed. Please wait...")
                         logger.info(f'Photo downloaded to: {img_path}')
+
+                        # Split photo name
                         photo_s3_name = img_path.split("/")
-                        # TODO upload the photo to S3
+
                         # Get the bucket name from the environment variable
                         images_bucket = os.environ['BUCKET_NAME']
-                        region_name = os.environ['REGION_NAME']
-                        client = boto3.client('s3')
-                        client.upload_file(img_path, images_bucket, photo_s3_name[1])
+                        sqs_queue_url = os.environ['SQS_QUEUE_URL']
+                        # Upload the image to S3
+                        s3_client = boto3.client('s3')
+                        s3_client.upload_file(img_path, images_bucket, photo_s3_name[-1])
 
-                        # Send an HTTP request to the YOLO5 service for prediction
-                        yolo5_url = "http://yolo5_app:8081/predict"
-                        headers = {'Content-Type': 'application/json'}
-                        # image_filename = img_path
-                        # json_data = {'imgName': image_filename}
+                        # Prepare the data to be sent to SQS
+                        prediction_id = str(uuid.uuid4())
+                        json_data = {
+                            'imgName': img_path,
+                            'chat_id': msg['chat']['id'],
+                            'prediction_id': prediction_id
+                        }
 
                         try:
-                            # TODO send a job to the SQS queue
-                            sqs = boto3.client('sqs', region_name=region_name)
-                            sqs_queue_url = os.environ['SQS_QUEUE_URL']
-
+                            # Send job to queue
+                            sqs = boto3.client('sqs', region_name='eu-west-3')
                             response = sqs.send_message(
                                 QueueUrl=sqs_queue_url,
-                                MessageBody=json.dumps({'imgName': img_path})
+                                MessageBody=json.dumps(json_data)
                             )
-                            self.send_text(msg.chat.id, f"Job sent to queue. MessageId: {response['MessageId']}")
-
-                            receive_response = sqs.receive_message(
-                                QueueUrl=sqs_queue_url,
-                                MaxNumberOfMessages=1,
-                                WaitTimeSeconds=10  # Wait time for long polling
-                            )
-
-                            if 'Messages' in receive_response:
-                                message = receive_response['Messages'][0]
-                                receipt_handle = message['ReceiptHandle']
-                                body_from_q = json.loads(message['Body'])
-                                # TODO send an HTTP request to the `yolo5` service for prediction
-                                # Send an HTTP POST request to the YOLO5 service
-                                response = requests.post(yolo5_url, headers=headers, json=body_from_q)
-                                # Logging the status code for debugging
-                                logger.info(f"Response status code: {response.status_code}")
-
-                                # Check the response status code
-                                # TODO send the returned results to the Telegram end-user
-                                if response.status_code == 200:
-                                    response_data = json.loads(response.text)
-                                    logger.info(response_data)
-                                    for key, value in response_data.items():
-                                        message = f"{key}: {value}"
-                                        self.send_text(msg['chat']['id'], message)
-
-                                # Delete the message from the queue after processing
-                                sqs.delete_message(
-                                    QueueUrl=sqs_queue_url,
-                                    ReceiptHandle=receipt_handle
-                                )
-                            else:
-                                self.send_text(msg['chat']['id'], "No messages available in the queue.")
-
-                            logger.info("Prediction request sent successfully.")
-                        except requests.Timeout:
-                            self.send_text(msg['chat']['id'], "Request timed out. Please try again later.")
+                            self.send_text(msg['chat']['id'], f"Job sent to queue. PredictionId: {prediction_id}")
                         except Exception as e:
-                            logger.info(f"Error {e}")
-                            logger.error('Error sending prediction request:', exc_info=True)
-                            self.send_text(msg['chat']['id'], "Error sending prediction request")
+                            logger.error(f'Error: {str(e)}')
+                            self.send_text(msg.chat.id, 'Failed to process the image. Please try again later.')
                     else:
-                        self.send_text(msg['chat']['id'],"Error invalid caption\n Available captions are :\n 1)Blur\n2)mix\n3)Salt and pepper\n 4)predict")
+                        self.send_text(msg['chat']['id'],
+                                       "Error invalid caption\n Available captions are :\n 1)Blur\n2)mix\n3)Salt and pepper\n 4)predict")
                 except Exception as e:
                     logger.info(f"Error {e}")
                     self.send_text(msg['chat']['id'], f'failed - try again later')
-            else:
-                self.send_text(msg['chat']['id'], "please provide caption")
+                else:
+                    self.send_text(msg['chat']['id'], "please provide caption")
