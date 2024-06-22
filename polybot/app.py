@@ -36,16 +36,13 @@ def get_secret():
 
 
 secret_json_str = get_secret()
-logger.info("secret_json_str" + secret_json_str)
 if secret_json_str:
     secret_dict = json.loads(secret_json_str)
     TELEGRAM_TOKEN = secret_dict.get('TELEGRAM_BOT_TOKEN')
-    logger.info("TELEGRAM_TOOKEN" + TELEGRAM_TOKEN)
 else:
     print("Failed to retrieve the secret")
 
 TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
-logger.info("TELEGRAM_APP_URL" + TELEGRAM_APP_URL)
 
 
 @app.route('/health_check', methods=['GET'])

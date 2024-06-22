@@ -6,7 +6,6 @@ from pathlib import Path
 import requests
 from detect import run
 import yaml
-from flask import Flask
 from loguru import logger
 import os
 import boto3
@@ -103,14 +102,15 @@ def consume():
                 # TODO store the prediction_summary in a DynamoDB table
                 # TODO perform a GET request to Polybot to `/results` endpoint
                 # Store the prediction_summary in a DynamoDB table
-                dynamodb = boto3.resource('dynamodb', region_name='eu-west-3')
+
+                dynamodb = boto3.resource('dynamodb', region_name=region_name)
                 logger.info({dynamodb})
                 table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
                 logger.info({table})
                 table.put_item(Item=prediction_summary)
 
                 # Send the message from my yolo5 to load balancer:
-                polybot_url = 'https://ehabo.int-devops.click/results'
+                polybot_url = os.environ['POLY_BOT_URL']
                 try:
                     response = requests.post(f'{polybot_url}', params={'predictionId': prediction_id})
                     response.raise_for_status()  # Raise an error for bad status codes

@@ -151,7 +151,7 @@ class ObjectDetectionBot(Bot):
                             logger.error(f'Error: {str(e)}')
                             self.send_text(msg.chat.id, 'Failed to process the image. Please try again later.')
                     else:
-                        self.send_text(msg['chat']['id'],"Error invalid caption\n Available captions are :\n 1)Blur\n2)Mix\n3)Salt and pepper\n4)Contour\n5)Predict")
+                        self.send_text(msg['chat']['id'],"Error invalid caption\n Available captions are :\n1) Blur\n2) Mix\n3) Salt and pepper\n4) Contour\n5) Predict")
                 except Exception as e:
                     logger.info(f"Error {e}")
                     self.send_text(msg['chat']['id'], f'failed - try again later')
