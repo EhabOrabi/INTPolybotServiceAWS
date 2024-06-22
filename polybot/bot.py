@@ -1,7 +1,5 @@
 import json
 import uuid
-
-import requests
 import telebot
 from loguru import logger
 import os
@@ -99,14 +97,14 @@ class ObjectDetectionBot(Bot):
                         self.send_photo(msg["chat"]["id"], new_path)
                         self.send_text(msg['chat']['id'], "Contour filter applied")
                     elif msg["caption"] == "Salt and pepper":  # concat, segment
-                        self.send_text(msg['chat']['id'], "salt_n_pepper filter in progress")
+                        self.send_text(msg['chat']['id'], "Salt and pepper filter in progress")
                         new_img = Img(img_path)
                         new_img.salt_n_pepper()
                         new_path = new_img.save_img()
                         self.send_photo(msg["chat"]["id"], new_path)
-                        self.send_text(msg['chat']['id'], "salt_n_pepper filter applied")
-                    elif msg["caption"] == "mix":
-                        self.send_text(msg['chat']['id'], "mix filter in progress")
+                        self.send_text(msg['chat']['id'], "Salt and pepper filter applied")
+                    elif msg["caption"] == "Mix":
+                        self.send_text(msg['chat']['id'], "Mix filter in progress")
                         new_img = Img(img_path)
                         new_img.salt_n_pepper()
                         new_path = new_img.save_img()
@@ -118,7 +116,7 @@ class ObjectDetectionBot(Bot):
                         self.send_photo(msg["chat"]["id"], new_path)
                         self.send_text(msg['chat']['id'], "mix filter applied")
 
-                    elif msg["caption"] == "predict":
+                    elif msg["caption"] == "Predict":
                         self.send_text(msg['chat']['id'], "Your image is being processed. Please wait...")
                         logger.info(f'Photo downloaded to: {img_path}')
 
@@ -128,6 +126,7 @@ class ObjectDetectionBot(Bot):
                         # Get the bucket name from the environment variable
                         images_bucket = os.environ['BUCKET_NAME']
                         sqs_queue_url = os.environ['SQS_QUEUE_URL']
+                        region_name = os.environ['REGION_NAME']
                         # Upload the image to S3
                         s3_client = boto3.client('s3')
                         s3_client.upload_file(img_path, images_bucket, photo_s3_name[-1])
@@ -142,7 +141,7 @@ class ObjectDetectionBot(Bot):
 
                         try:
                             # Send job to queue
-                            sqs = boto3.client('sqs', region_name='eu-west-3')
+                            sqs = boto3.client('sqs', region_name=region_name)
                             response = sqs.send_message(
                                 QueueUrl=sqs_queue_url,
                                 MessageBody=json.dumps(json_data)
@@ -152,10 +151,9 @@ class ObjectDetectionBot(Bot):
                             logger.error(f'Error: {str(e)}')
                             self.send_text(msg.chat.id, 'Failed to process the image. Please try again later.')
                     else:
-                        self.send_text(msg['chat']['id'],
-                                       "Error invalid caption\n Available captions are :\n 1)Blur\n2)mix\n3)Salt and pepper\n 4)predict")
+                        self.send_text(msg['chat']['id'],"Error invalid caption\n Available captions are :\n 1)Blur\n2)Mix\n3)Salt and pepper\n4)Contour\n5)Predict")
                 except Exception as e:
                     logger.info(f"Error {e}")
                     self.send_text(msg['chat']['id'], f'failed - try again later')
-                else:
-                    self.send_text(msg['chat']['id'], "please provide caption")
+            else:
+                self.send_text(msg['chat']['id'], "please provide caption")
