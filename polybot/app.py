@@ -9,16 +9,11 @@ from bot import ObjectDetectionBot
 
 app = flask.Flask(__name__)
 
-dynamodb = boto3.resource('dynamodb', region_name='eu-west-3')
-table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
-
 
 # TODO load TELEGRAM_TOKEN value from Secret Manager
-
-
 def get_secret():
     secret_name = "TELEGRAM_BOT_TOKEN"
-    region_name = "eu-west-3"
+    region_name = os.environ['REGION_NAME']
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
@@ -41,13 +36,16 @@ def get_secret():
 
 
 secret_json_str = get_secret()
+logger.info("secret_json_str" + secret_json_str)
 if secret_json_str:
     secret_dict = json.loads(secret_json_str)
     TELEGRAM_TOKEN = secret_dict.get('TELEGRAM_BOT_TOKEN')
+    logger.info("TELEGRAM_TOOKEN" + TELEGRAM_TOKEN)
 else:
     print("Failed to retrieve the secret")
 
 TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
+logger.info("TELEGRAM_APP_URL" + TELEGRAM_APP_URL)
 
 
 @app.route('/health_check', methods=['GET'])
@@ -70,6 +68,9 @@ def webhook():
 @app.route(f'/results', methods=['POST'])
 def results():
     # TODO use the prediction_id to retrieve results from DynamoDB and send to the end-user
+    region_name = os.environ['REGION_NAME']
+    dynamodb = boto3.resource('dynamodb', region_name=region_name)
+    table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
 
     logger.info("Received request at /results endpoint")
     try:
@@ -85,14 +86,12 @@ def results():
             item = response['Item']
             chat_id = item['chat_id']
             labels = item['labels']
-            unique_filename = item['unique_filename']
 
             text_results = f"Prediction results for image {item['original_img_path']}:\n"
             for label in labels:
                 text_results += f"- {label['class']} at ({label['cx']:.2f}, {label['cy']:.2f}) with size ({label['width']:.2f}, {label['height']:.2f})\n"
 
             bot.send_text(chat_id, text_results)
-
             return 'Ok'
         else:
             return 'No results found', 404
