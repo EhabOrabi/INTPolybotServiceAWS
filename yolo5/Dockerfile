@@ -9,7 +9,7 @@ ENV BUCKET_NAME="ehaborabi-bucket"
 ENV REGION_NAME="eu-west-3"
 ENV SQS_QUEUE_NAME="ehabo-PolybotService-Queue"
 ENV SQS_QUEUE_URL="https://sqs.eu-west-3.amazonaws.com/019273956931/ehabo-PolybotService-Queue"
-ENV POLY_BOT_URL="https://ehabo.int-devops.click/results"
+ENV POLY_BOT_URL="https://ehabo-polybot.int-devops.click/results"
 COPY . .
 
 CMD ["python3", "app.py"]
