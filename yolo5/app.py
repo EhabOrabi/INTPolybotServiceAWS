@@ -110,8 +110,7 @@ def consume():
                 table.put_item(Item=prediction_summary)
 
                 # Send the message from my yolo5 to load balancer:
-               
-                logger.info("DEBUG polybot_url" + polybot_url)
+                polybot_url = os.environ['POLY_BOT_URL']
                 try:
                     response = requests.post(f'{polybot_url}', params={'predictionId': prediction_id})
                     response.raise_for_status()  # Raise an error for bad status codes
