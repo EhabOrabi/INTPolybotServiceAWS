@@ -11,7 +11,7 @@ import os
 import boto3
 
 images_bucket = os.environ['BUCKET_NAME']
-queue_url = os.environ['SQS_QUEUE_URL']
+queue_name = os.environ['SQS_QUEUE_NAME']
 region_name = os.environ['REGION_NAME']
 
 sqs_client = boto3.client('sqs', region_name=region_name)
@@ -24,7 +24,7 @@ def consume():
     # The function runs in an infinite loop, continually polling the SQS queue for new messages.
     while True:
         # Receive Message from SQS
-        response = sqs_client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=1, WaitTimeSeconds=5)
+        response = sqs_client.receive_message(QueueUrl=queue_name, MaxNumberOfMessages=1, WaitTimeSeconds=5)
         # Check for Messages:
         if 'Messages' in response:
             # Extract message details
@@ -39,7 +39,7 @@ def consume():
             img_name = message.get('imgName')
             if not img_name or not chat_id:
                 logger.error('Invalid message format: chat_id or imgName missing')
-                sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
+                sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
                 continue
 
             logger.info(f'img_name received: {img_name}')
@@ -64,9 +64,6 @@ def consume():
 
             logger.info(f'prediction: {prediction_id}/{original_img_path}. done')
 
-            # This is the path for the predicted image with labels
-            # The predicted image typically includes bounding boxes drawn around the detected objects, along with class labels and possibly confidence scores.
-            # predicted_img_path = Path('static') / 'data' / prediction_id / Path(original_img_path).name
             predicted_img_path = Path(f'static/data/{prediction_id}/{str(photo_s3_name[1])}')
             logger.info(f'predicted_img_path: {predicted_img_path}.')
             # Upload predicted image to S3
@@ -117,17 +114,18 @@ def consume():
                     logger.info(f'prediction: {prediction_id}. Notified Polybot microservice successfully')
                 except requests.exceptions.RequestException as e:
                     logger.error(f'prediction: {prediction_id}. Failed to notify Polybot microservice. Error: {str(e)}')
-                    if response is not None:
+                    if e.response is not None:
                         logger.error(f'Response status code: {response.status_code}')
                         logger.error(f'Response text: {response.text}')
 
             else:
                 logger.error(f'Prediction: {prediction_id}{original_img_path}. prediction result not found')
-                sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
+                print(f"Using SQS queue URL: {queue_name}")
+                sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
                 continue
 
             # Delete the message from the queue as the job is considered as DONE
-            sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
+            sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
 
 
 if __name__ == "__main__":
