@@ -108,7 +108,6 @@ def consume():
                 table.put_item(Item=prediction_summary)
 
                 # Send the message from my yolo5 to load balancer:
-
                 try:
                     response = requests.post(f'{polybot_url_results}', params={'predictionId': prediction_id})
                     response.raise_for_status()  # Raise an error for bad status codes
@@ -121,7 +120,6 @@ def consume():
 
             else:
                 logger.error(f'Prediction: {prediction_id}{original_img_path}. prediction result not found')
-                print(f"Using SQS queue URL: {queue_name}")
                 sqs_client.delete_message(QueueUrl=queue_name, ReceiptHandle=receipt_handle)
                 continue
 
