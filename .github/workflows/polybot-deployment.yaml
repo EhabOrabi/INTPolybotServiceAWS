@@ -18,7 +18,6 @@ jobs:
         run: |
           cd polybot
          
-          # Login to DockerHub (comment out if you don't use DockerHub):         
           docker login -u ${{ secrets.DOCKERHUB_USERNAME}} -p ${{ secrets.DOCKERHUB_PASSWORD }}
 
           POLY_BOT_IMAGE_NAME=polybot:${{ github.run_number }}
@@ -34,7 +33,20 @@ jobs:
     steps:
       - name: Checkout the repo code
         uses: actions/checkout@v2
+
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
       - name: Deploy new version
-        run: |         
-          # TODO your implementation here....     
-     
+        run: |
+          POLYBOT_INSTANCES=$(aws elbv2 describe-target-health --target-group-arn ${{ secrets.POLYBOT_TARGET_GROUP_ARN }} --query 'TargetHealthDescriptions[*].Target.Id' --output text --region ${{ secrets.AWS_REGION }})
+          
+          for instance in $POLYBOT_INSTANCES; do
+            PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $instance --query 'Reservations[0].Instances[0].PublicIpAddress' --output text --region ${{ secrets.AWS_REGION }})
+            ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@$PUBLIC_IP << 'EOF'
+              sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
+              sudo docker stop polybot || true
+              sudo docker rm polybot || true
+              sudo docker run -d --restart always --name polybot -p 8443:8443 ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
