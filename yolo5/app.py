@@ -13,7 +13,7 @@ import boto3
 images_bucket = os.environ['BUCKET_NAME']
 queue_name = os.environ['SQS_QUEUE_NAME']
 region_name = os.environ['REGION_NAME']
-polybot_url_results = os.environ['POLY_BOT_URL_RESULTS']
+#polybot_url_results = os.environ['POLY_BOT_URL_RESULTS']
 
 sqs_client = boto3.client('sqs', region_name=region_name)
 
@@ -109,7 +109,7 @@ def consume():
 
                 # Send the message from my yolo5 to load balancer:
                 try:
-                    response = requests.post(f'{polybot_url_results}', params={'predictionId': prediction_id})
+                    response = requests.post(f'https://ehabo-polybot.int-devops.click/results', params={'predictionId': prediction_id})
                     response.raise_for_status()  # Raise an error for bad status codes
                     logger.info(f'prediction: {prediction_id}. Notified Polybot microservice successfully')
                 except requests.exceptions.RequestException as e:
