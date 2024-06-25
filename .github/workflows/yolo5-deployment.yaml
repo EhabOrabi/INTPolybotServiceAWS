@@ -13,6 +13,6 @@ jobs:
       - name: Checkout the repo code
         uses: actions/checkout@v2
       - name: Build and push image
-        run: >
+        run: |
           cd yolo5 
            # Login to DockerHub (comment out if you don't use DockerHub):
