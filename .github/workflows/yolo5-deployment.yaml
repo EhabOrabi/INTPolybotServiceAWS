@@ -1,4 +1,3 @@
----
 name: Yolo5 Microservice Deployment
 on:
   push:
@@ -13,6 +12,5 @@ jobs:
       - name: Checkout the repo code
         uses: actions/checkout@v2
       - name: Build and push image
-        run: |
-          cd yolo5 
-           # Login to DockerHub (comment out if you don't use DockerHub):
+        run:  |
+          cd yolo5
