@@ -17,7 +17,10 @@ jobs:
       - name: Build and push image
         run: |
           cd polybot
+          
+          # Login to DockerHub (comment out if you don't use DockerHub):
           docker login -u ${{ secrets.DOCKERHUB_USERNAME}} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+
           POLY_BOT_IMAGE_NAME=polybot:${{ github.run_number }}
           docker build -t $POLY_BOT_IMAGE_NAME .
           docker tag $POLY_BOT_IMAGE_NAME ${{ secrets.DOCKERHUB_USERNAME}}/$POLY_BOT_IMAGE_NAME
@@ -47,7 +50,7 @@ jobs:
           for instance in $POLYBOT_INSTANCES; do
             PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $instance --query 'Reservations[0].Instances[0].PublicIpAddress' --output text --region ${{ secrets.AWS_REGION }})
             ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@$PUBLIC_IP << 'EOF'
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
-            sudo docker stop polybot || true
-            sudo docker rm polybot || true
-            sudo docker run -d --restart always --name polybot -p 8443:8443 ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
+              sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
+              sudo docker stop polybot || true
+              sudo docker rm polybot || true
+              sudo docker run -d --restart always --name polybot -p 8443:8443 ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
