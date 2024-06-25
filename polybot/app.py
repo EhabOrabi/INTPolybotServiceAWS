@@ -83,14 +83,20 @@ def results():
             item = response['Item']
             chat_id = item['chat_id']
             labels = item['labels']
+           
+            class_counts = {}
+            for label in labels:
+                class_name = label['class']
+                if class_name in class_counts:
+                    class_counts[class_name] += 1
+                else:
+                    class_counts[class_name] = 1
 
-            # text_results = f"Prediction results for image {item['original_img_path']}:\n"
-            # for label in labels:
-            # text_results += f"- {label['class']} at ({label['cx']:.2f}, {label['cy']:.2f}) with size ({label['width']:.2f}, {label['height']:.2f})\n"
-            for key, value in labels.items():
-                message = f"{key}: {value}"
-                bot.send_text(chat_id, message)
-            # bot.send_text(chat_id, text_results)
+            text_results = f"Prediction results for image {item['original_img_path']}:\n"
+            for class_name, count in class_counts.items():
+                text_results += f"{class_name}: {count}\n"
+
+            bot.send_text(chat_id, text_results)
             return 'Ok'
         else:
             return 'No results found', 404
