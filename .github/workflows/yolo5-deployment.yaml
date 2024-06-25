@@ -18,7 +18,7 @@ jobs:
         run: |
           cd yolo5
           
-          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }} 
 
           YOLO5_IMAGE_NAME=yolo5:${{ github.run_number }}
           docker build -t $YOLO5_IMAGE_NAME .

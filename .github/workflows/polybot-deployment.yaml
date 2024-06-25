@@ -18,7 +18,7 @@ jobs:
         run: |
           cd polybot
          
-          docker login -u ${{ secrets.DOCKERHUB_USERNAME}} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME}} -p ${{ secrets.DOCKERHUB_PASSWORD }} 
 
           POLY_BOT_IMAGE_NAME=polybot:${{ github.run_number }}
           docker build -t $POLY_BOT_IMAGE_NAME .          
