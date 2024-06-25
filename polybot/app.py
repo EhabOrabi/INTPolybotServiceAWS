@@ -84,11 +84,13 @@ def results():
             chat_id = item['chat_id']
             labels = item['labels']
 
-            text_results = f"Prediction results for image {item['original_img_path']}:\n"
-            for label in labels:
-                text_results += f"- {label['class']} at ({label['cx']:.2f}, {label['cy']:.2f}) with size ({label['width']:.2f}, {label['height']:.2f})\n"
-
-            bot.send_text(chat_id, text_results)
+            # text_results = f"Prediction results for image {item['original_img_path']}:\n"
+            # for label in labels:
+            # text_results += f"- {label['class']} at ({label['cx']:.2f}, {label['cy']:.2f}) with size ({label['width']:.2f}, {label['height']:.2f})\n"
+            for key, value in labels.items():
+                message = f"{key}: {value}"
+                bot.send_text(chat_id, message)
+            # bot.send_text(chat_id, text_results)
             return 'Ok'
         else:
             return 'No results found', 404
