@@ -15,7 +15,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Build and push image
         run: |
-  
+          cd yolo5
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME}} -p ${{ secrets.DOCKERHUB_PASSWORD }}
 
   Deploy:
     runs-on: ubuntu-latest
@@ -28,7 +29,7 @@ jobs:
       - name: Update Launch Template and Refresh ASG
         run: |
           # Create a new launch template version
-          aws ec2 create-launch-template-version --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} --source-version ${{ secrets.LAUNCH_TEMPLATE_VERSION }} --launch-template-data '{"UserData":"#!/bin/bash\nsudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest\nsudo docker stop yolo5 || true\nsudo docker rm yolo5 || true\nsudo docker run -d --name yolo5 -p 8081:8081 ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest"}'
+          aws ec2 create-launch-template-version --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} --source-version ${{ secrets.LAUNCH_TEMPLATE_VERSION }} --launch-template-data '{"UserData":"#!/bin/bash\n docker pull ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest docker stop yolo5 || true docker rm yolo5 || true docker run -d --name yolo5 -p 8081:8081 ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest"}'
             
           # Get the new version number
           NEW_VERSION=$(aws ec2 describe-launch-template-versions --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} --query "LaunchTemplateVersions[-1].VersionNumber" --output text)
