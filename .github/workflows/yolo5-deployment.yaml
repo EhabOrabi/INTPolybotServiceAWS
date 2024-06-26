@@ -40,7 +40,7 @@ jobs:
         sudo docker stop yolo5* || true
         sudo docker rm yolo5* || true
         sudo docker pull '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'
-        sudo docker run -d --name yolo5 -p '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'
+        sudo docker run -d --name yolo5 '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'
           
 #        # Update launch template version with encoded user data
 #        aws ec2 create-launch-template-version \
