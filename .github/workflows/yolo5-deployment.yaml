@@ -35,27 +35,25 @@ jobs:
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest .
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest
 
-    - name: Update Launch Template and Refresh ASG
-      run: |
-        # Encode user data to Base64
-        USER_DATA=$(echo '#!/bin/bash
+    - name: Pull latest image from docker hub and rut it on EC2
+      run: |     
         sudo docker pull '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'
         sudo docker stop yolo5 || true
         sudo docker rm yolo5 || true
-        sudo docker run -d --name yolo5 -p 8443:8443 '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'' | base64 -w 0)
+        sudo docker run -d --name yolo5 -p '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest')
           
-        # Update launch template version with encoded user data
-        aws ec2 create-launch-template-version \
-          --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
-          --source-version ${{ secrets.LAUNCH_TEMPLATE_VERSION }} \
-          --launch-template-data "{\"UserData\":\"${USER_DATA}\"}"
-          
-        # Modify default version and start instance refresh
-        aws ec2 modify-launch-template \
-          --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
-          --default-version $(aws ec2 describe-launch-template-versions --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} --query "LaunchTemplateVersions[-1].VersionNumber" --output text)
-          
-        # Start instance refresh
-        aws autoscaling start-instance-refresh --auto-scaling-group-name ${{ secrets.ASG_NAME }}
+#        # Update launch template version with encoded user data
+#        aws ec2 create-launch-template-version \
+#          --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+#          --source-version ${{ secrets.LAUNCH_TEMPLATE_VERSION }} \
+#          --launch-template-data "{\"UserData\":\"${USER_DATA}\"}"
+#
+#        # Modify default version and start instance refresh
+#        aws ec2 modify-launch-template \
+#          --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+#          --default-version $(aws ec2 describe-launch-template-versions --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} --query "LaunchTemplateVersions[-1].VersionNumber" --output text)
+#
+#        # Start instance refresh
+#        aws autoscaling start-instance-refresh --auto-scaling-group-name ${{ secrets.ASG_NAME }}
       env:
         AWS_REGION: ${{ secrets.AWS_REGION }}
