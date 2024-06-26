@@ -1,19 +1,56 @@
-name: Polybot Microservice Deployment
+name: Polybot Deployment
 
 on:
   push:
-    paths:
-      - 'polybot/**'
     branches:
       - main
 
 jobs:
-  Build:
+  build-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repo code
-        uses: actions/checkout@v1
 
-      - name: Build and push image
-        run: |
-          cd polybot
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Set up Docker Build
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+    - name: Build and push Docker image
+      run: |
+        cd polybot
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest .
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
+
+    - name: Set up SSH key
+      run: |
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
+
+    - name: Deploy to AWS EC2
+      run: |         
+        POLYBOT_INSTANCES=$(aws elbv2 describe-target-health --target-group-arn ${{ secrets.POLYBOT_TARGET_GROUP_ARN }} --query 'TargetHealthDescriptions[*].Target.Id' --output text --region ${{ secrets.AWS_REGION }})
+          for instance in $POLYBOT_INSTANCES; do
+            PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $instance --query 'Reservations[0].Instances[0].PublicIpAddress' --output text --region ${{ secrets.AWS_REGION }})
+            ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@$PUBLIC_IP << 'EOF'
+              sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
+              sudo docker stop polybot || true
+              sudo docker rm polybot || true
+              sudo docker run -d --restart always --name polybot -p 8443:8443 ${{ secrets.DOCKERHUB_USERNAME }}/polybot:latest
+        EOF
+          done
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }}
