@@ -35,27 +35,16 @@ jobs:
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest .
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest
 
-    - name: Update Launch Template and Refresh ASG
-      run: |
-        # Encode user data to Base64
-        USER_DATA=$(echo '#!/bin/bash
-        sudo docker pull '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'
-        sudo docker stop yolo5 || true
-        sudo docker rm yolo5 || true
-        sudo docker run -d --name yolo5 -p 8443:8443 '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'' | base64 -w 0)
-          
-        # Update launch template version with encoded user data
-        aws ec2 create-launch-template-version \
-          --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
-          --source-version ${{ secrets.LAUNCH_TEMPLATE_VERSION }} \
-          --launch-template-data "{\"UserData\":\"${USER_DATA}\"}"
-          
-        # Modify default version and start instance refresh
-        aws ec2 modify-launch-template \
-          --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
-          --default-version $(aws ec2 describe-launch-template-versions --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} --query "LaunchTemplateVersions[-1].VersionNumber" --output text)
-          
-        # Start instance refresh
-        aws autoscaling start-instance-refresh --auto-scaling-group-name ${{ secrets.ASG_NAME }}
+    - name: Deploy to AWS EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.EC2_PUBLIC_IP }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        script: |      
+          sudo docker pull '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'
+          sudo docker stop yolo5 || true
+          sudo docker rm yolo5 || true
+          sudo docker run -d --name yolo5 '${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest'' | base64 -w 0)
       env:
         AWS_REGION: ${{ secrets.AWS_REGION }}
