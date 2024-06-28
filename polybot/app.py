@@ -93,6 +93,7 @@ def results():
                     class_counts[class_name] = 1
 
             #text_results = f"Prediction results for image {item['original_img_path']}:\n"
+            text_results = ""
             for class_name, count in class_counts.items():
                 text_results += f"{class_name}: {count}\n"
 
