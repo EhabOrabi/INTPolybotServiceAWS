@@ -16,12 +16,15 @@ class Bot:
         # all communication with Telegram servers are done using self.telegram_bot_client
         self.telegram_bot_client = telebot.TeleBot(token)
 
+        logger.info("#################################### DEBUG1 #######################################")
+
         # remove any existing webhooks configured in Telegram servers
         self.telegram_bot_client.remove_webhook()
         time.sleep(0.5)
-
+        logger.info("#################################### DEBUG2 #######################################")
         # set the webhook URL
         self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
+        logger.info("#################################### DEBUG3 #######################################")
         print("Webhook set successfully.")
 
         logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
