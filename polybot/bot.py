@@ -146,7 +146,7 @@ class ObjectDetectionBot(Bot):
                                 QueueUrl=sqs_queue_url,
                                 MessageBody=json.dumps(json_data)
                             )
-                            # self.send_text(msg['chat']['id'], f"Job sent to queue. PredictionId: {prediction_id}")
+                            logger.info(msg['chat']['id'], f"Job sent to queue. PredictionId: {prediction_id}")
                         except Exception as e:
                             logger.error(f'Error: {str(e)}')
                             self.send_text(msg.chat.id, 'Failed to process the image. Please try again later.')
