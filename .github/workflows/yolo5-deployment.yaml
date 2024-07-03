@@ -40,7 +40,7 @@ jobs:
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest .
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest
 
-    - name: Get EC2 instance ID
+    - name: Get EC2 instance ID from ASG
       run: |
         INSTANCE_ID=$(aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[0].InstanceId" --output text)
         echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
