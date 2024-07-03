@@ -40,22 +40,34 @@ jobs:
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest .
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest
 
-    - name: Get EC2 instance ID from ASG
+    - name: Get Auto Scaling Group Name
       run: |
-        INSTANCE_ID=$(aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[0].InstanceId" --output text)
+        ASG_NAME=$(aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[0].AutoScalingGroupName" --output text)
+        echo "ASG_NAME=$ASG_NAME" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Get EC2 Instance ID from Auto Scaling Group
+      run: |
+        INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names ${{ env.ASG_NAME }} --query "AutoScalingGroups[0].Instances[0].InstanceId" --output text)
         echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
       shell: bash
 
-    - name: Get EC2 public IP
-      id: get_public_ip
+    - name: Get EC2 Public IP
       run: |
         EC2_PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{ env.INSTANCE_ID }} --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
         echo "EC2_PUBLIC_IP=$EC2_PUBLIC_IP" >> $GITHUB_ENV
         echo "Retrieved EC2 public IP: $EC2_PUBLIC_IP"
       shell: bash
 
+    - name: Debug Environment Variables
+      run: |
+        echo "ASG Name: ${{ env.ASG_NAME }}"
+        echo "Instance ID: ${{ env.INSTANCE_ID }}"
+        echo "EC2 Public IP: ${{ env.EC2_PUBLIC_IP }}"
+        cat private_key.pem
+
     - name: Deploy to AWS EC2
-      run: |      
+      run: |
         # Retry SSH connection up to 5 times with a delay
         for attempt in {1..5}; do
           echo "Attempt $attempt to connect to ${{ env.EC2_PUBLIC_IP }}"
