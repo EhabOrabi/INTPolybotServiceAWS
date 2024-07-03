@@ -59,13 +59,6 @@ jobs:
         echo "Retrieved EC2 public IP: $EC2_PUBLIC_IP"
       shell: bash
 
-    - name: Debug Environment Variables
-      run: |
-        echo "ASG Name: ${{ env.ASG_NAME }}"
-        echo "Instance ID: ${{ env.INSTANCE_ID }}"
-        echo "EC2 Public IP: ${{ env.EC2_PUBLIC_IP }}"
-        cat private_key.pem
-
     - name: Deploy to AWS EC2
       run: |
         # Retry SSH connection up to 5 times with a delay
@@ -73,8 +66,8 @@ jobs:
           echo "Attempt $attempt to connect to ${{ env.EC2_PUBLIC_IP }}"
           if ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "echo 'SSH connection successful'"; then
             echo "SSH connection successful to ${{ env.EC2_PUBLIC_IP }}"
-            ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "sudo docker stop yolo5* || true"
-            ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "sudo docker rm yolo5* || true"
+            ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "sudo docker stop yolo5 || true"
+            ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "sudo docker rm yolo5 || true"
             ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest"
             ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ env.EC2_PUBLIC_IP }} "sudo docker run -d --name yolo5 ${{ secrets.DOCKERHUB_USERNAME }}/yolo5:latest"
             break
