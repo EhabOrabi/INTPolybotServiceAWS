@@ -109,7 +109,7 @@ def consume():
 
                 # Send the message from my yolo5 to load balancer:
                 try:
-                    response = requests.post(f'{"https://ehabo-polybot.int-devops.click/results"}', params={'predictionId': prediction_id})
+                    response = requests.post(f'{"https://ehabo-polybot2.int-devops.click/results"}', params={'predictionId': prediction_id})
                     response.raise_for_status()  # Raise an error for bad status codes
                     logger.info(f'prediction: {prediction_id}. Notified Polybot microservice successfully')
                 except requests.exceptions.RequestException as e:
