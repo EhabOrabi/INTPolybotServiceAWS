@@ -23,6 +23,9 @@ class Bot:
         time.sleep(0.5)
         logger.info("#################################### DEBUG2 #######################################")
         # set the webhook URL
+
+        logger.info(f'{telegram_chat_url}/{token}/')
+
         self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
         logger.info("#################################### DEBUG3 #######################################")
         print("Webhook set successfully.")
