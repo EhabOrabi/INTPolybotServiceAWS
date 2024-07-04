@@ -29,7 +29,7 @@ class Bot:
         logger.info("#################################### DEBUG2 #######################################")
 
         response = requests.get(f'{telegram_chat_url}/{token}/')
-        print(response.status_code)
+        logger.info(response.status_code)
 
         self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
         logger.info("#################################### DEBUG3 #######################################")
