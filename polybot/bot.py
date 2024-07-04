@@ -1,5 +1,7 @@
 import json
 import uuid
+
+import requests
 import telebot
 from loguru import logger
 import os
@@ -16,15 +18,18 @@ class Bot:
         # all communication with Telegram servers are done using self.telegram_bot_client
         self.telegram_bot_client = telebot.TeleBot(token)
 
-        logger.info("#################################### DEBUG1 #######################################")
+        logger.info("#################################### DEBUG0 #######################################")
 
         # remove any existing webhooks configured in Telegram servers
         self.telegram_bot_client.remove_webhook()
         time.sleep(0.5)
-        logger.info("#################################### DEBUG2 #######################################")
+        logger.info("#################################### DEBUG1 #######################################")
         # set the webhook URL
 
-        logger.info(f'{telegram_chat_url}/{token}/')
+        logger.info("#################################### DEBUG2 #######################################")
+
+        response = requests.get(f'{telegram_chat_url}/{token}/')
+        print(response.status_code)
 
         self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
         logger.info("#################################### DEBUG3 #######################################")
