@@ -1,125 +1,174 @@
-# The Polybot Service: AWS Project
+# The Polybot Service: Terraform Project
 
 ## Background and goals
 
-In the [previous Docker project][PolybotServiceDocker], you've developed and deployed containerized service which detects objects in images sent through a Telegram chatbot. 
-In addition, your service could effortlessly be launched on any machine using (almost) a single Docker compose command. Great job! 
+In the [previous AWS project][PolybotServiceAWS], you've provisioned a scalable, highly available and well-architected Polybot service using cloud resources. 
 
-But how services are really deployed in the cloud? What about scalability?
-Consider if your service were to receive 30 images per second - would it effectively handle the load? 
-Additionally, in the event of an accidental virtual machine shutdown, does your service stay available? does it maintain high availability?
+This project focuses on Infrastructure as Code (IaC) techniques in order to automate the provisioning of the cloud resources for your Polybot service **in different AWS regions**. 
 
-In this project, you'll deploy your Polybot Service on AWS following best practices for a well-architected infrastructure.
-You'll utilize the majority of the AWS resources covered in the tutorials, including EC2, VPC, IAM, S3, SQS, DynamoDB, ELB, ASG, Lambda, CloudWatch, and more.
+Why is this good? Here are just three reasons among many...
+
+- Your infrastructure configurations would be versioned as part of your git repo, allows you to track changes and revert to previous versions if needed.
+- Let's say compliance regulations require to provision your service across 6 different regions on the globe. You'll be able to do it in a click of a mouse, while ensuring consistency between regions. 
+- You'll significantly improve your readiness to [Disaster Recovery (RD)](https://cloud.google.com/learn/what-is-disaster-recovery).
 
 ## Preliminaries
 
-1. Fork this repo by clicking **Fork** in the top-right corner of the page. 
-2. Clone your forked repository by:
-   ```bash
-   git clone https://github.com/<your-username>/<your-project-repo-name>
-   ```
-   Change `<your-username>` and `<your-project-repo-name>` according to your GitHub username and the name you gave to your fork. E.g. `git clone https://github.com/johndoe/PolybotServiceAWS`.
-3. Open the repo as a code project in your favorite IDE (Pycharm, VSCode, etc..).
-   It is also a good practice to create an isolated Python virtual environment specifically for your project ([see here how to do it in PyCharm](https://www.jetbrains.com/help/pycharm/creating-virtual-environment.html)).
+No need to fork this repo as it doesn't contain code resources. 
+You can work on the same repo used in the previous AWS project.
 
-Later on, you are encouraged to change the `README.md` file content to provide relevant information about your service project.
+> [!WARNING]
+> This project involves working with multiple AWS services. 
+> Please proceed with caution and ensure that you understand the implications of provisioning resources using Terraform. 
+> Always double-check your Terraform configurations before applying changes, and use `terraform destroy` when necessary to tear down resources and avoid additional charges.
 
 Let's get started...
 
-## Infrastructure
 
-- If you don't have it yet, create a VPC with at least two public subnets in different AZs.
-- During the project you'll deploy the Polybot Service in EC2 instances. For that, your instances has to have permission on some AWS services (E.g. for example to upload/download photos in S3).
-  The correct way to do it is by attaching an **IAM role** with the required permissions to your EC2 instance. **Don't** use or generate access keys.
+## Configuration files - structure and usage
 
-> [!WARNING]
-> Never commit AWS credentials into your git repo nor your Docker containers!
+Here is a general structure for the Terraform root module directory:
 
-## Provision the `polybot` microservice
+```text
+tf/
+├── modules/
+├───── polybot/                         # Module for polybot resources
+│      ├── main.tf
+│      ├── variables.tf
+│      └── outputs.tf
+├───── yolo5/                           # Module for yolo5 resources
+│      ├── main.tf
+│      ├── variables.tf
+│      └── outputs.tf
+├── main.tf                         # Main configuration file
+├── outputs.tf
+├── variables.tf
+├── region.us-east-1.tfvars         # Values related for us-east-1 region
+└── region.eu-central-1.tfvars      # Values related for eu-central-1 region
+```
 
-![][botaws2]
+Once your work is completed, you should be able to provision (and destroy) the Polybot service as follows:
 
-- The Polybot microservice should be running in a `micro` EC2 instance. You'll find the code skeleton under `polybot/`. Take a look at it - it's similar to the one used in the previous project, so you can leverage your code implementation from before.
-- The app should be running automatically as the EC2 instances are being started (in case the instance was stopped), **without any manual steps**.      
+
+1. Select (or create of doesn't exist) the workspace in which you want to provision the infrastructure:
+
+```bash
+terraform workspace select us-east-1 || terraform workspace new us-east-1
+```
+
+2. Provision the service with region-specific values file and variables:
+
+```bash
+# Terraform will use the value from the environment variable TF_VAR_botToken for the botToken variable.
+export TF_VAR_botToken="123456789:ABCDefghIJKLmnopQRStuvWXYZ1234567890"
+terraform apply -var-file=region.us-east-1.tfvars
+```
+
+Wait for the service until it's operational...
+
+3. When done, **destroy all resources to avoid unnecessary costs**.
+
+```bash
+terraform destroy -var-file=region.us-east-1.tfvars
+```
+
+## General notes
+
+- As the above configuration files structure suggests, the Polybot and Yolo5 microservice should be configured as separate **Terraform Modules**. 
+- Since Terraform can provision and destroy the same infrastructure consistently, avoid additional charges and don't keep your AWS resources existing for long time. **Destroy them when you don't work on your project**. 
+- Don't store sensitive data in the `.tf` or `.tfvars` files.
+- Feel free to use other Terraform modules (e.g. for VPC, ASG, etc...).
+- If you work properly, you should be able to provision your service in a new fresh AWS account **that you have never seen before, in any arbitrary region**!
+  Thus, make sure that all of your service resources are managed by Terraform **without exceptions**. You shouldn't do any manual step to make it work.
   
-  There are many approached to achieve that. As a DevOps engineers, we prefer running the app as a Docker container, and make it run automatically using the `--restart always` flag, or as a Linux service.
+  For example, you cannot rely on a dedicated AMI that you created beforehand which contains the application code and dependencies, as on a new AWS account, those AMI would not be available.
+
+## Manage state across multiple regions
+
+The below image demonstrates the Polybot Service deployed in 6 different regions.
+Each region has its own Telegram bot token and app URL, but resource-wise, the regions are identical, they are deployed using the same stack of resources in AWS.
+The different `.tfstate` files of all regions are stored in the same S3 bucket, located in one of the regions (`us-east-1` in this case). 
+
+![][tf_project_regions]
+
+Choose one of your regions to store the `.tfstate` files for all workspaces in a dedicated [S3 bucket backend](https://developer.hashicorp.com/terraform/language/settings/backends/s3). 
+
+## Applying region-specific values per region 
+
+The `region.REGION_CODE.tfvars` files should contain region-related values.
+As mentioned above, once you want to apply the configuration for a given region, provide the corresponding `.tfvars` in the `terraform apply` command:
+
+```bash
+terraform apply -var-file=region.us-east-1.tfvars 
+```
+
+All your `.tf` configuration files should be region-agnostic, which means, you have to avoid hardcoding specific region-related settings, such as AMIs, availability zones, etc...
+
+To avoid large charges in AWS, test the service provisioning in **2 different regions only** (and once it works, destroy it).
+Generalizing it to more regions should be as simple as creating the corresponding `.tfvars` file for the region, as well as generating a new Telegram token. 
+
+## Deploy the Polybot and the Yolo5 apps in their EC2 instances
+
+As you may know, in order for the service to be up and running, it's necessary not only to provision the underlying infrastructure but also to deploy the Polybot and Yolo5 apps within their respective EC2 instances. 
+
+Feel free to design your own solution, but you are highly encouraged to leverage the CI/CD pipeline developed in the previous AWS project for this purpose, which essentially used to automate the deployment of the services in their instances.
+
+The workflow is as follows: 
+
+1. Terraform is used to provision the infrastructure (leaving the EC2 instances empty):
+
+```bash
+terraform apply ....
+```
+
+2. Then, trigger the CI/CD pipeline from previous project (with necessary adjustments) to deploy the initial app version onto the EC2 instances.
+
+## Integrate a simple CI/CD pipeline for Terraform 
+
+Similarly to the CI/CD pipelines used to deploy a new version of the service, we also want to automate the provisioning process of AWS resources done by Terraform. 
+
+When you change some of your `.tf` configuration files locally, then commit and push them, a **semi-automated** pipeline would provision the new infrastructure changes in AWS. 
+By semi-automated we mean that the actual infrastructure provisioning would be triggered **manually**, since it's important to have a human approval step before making changes to the product infrastructure.
+
+You're provided with three GitHub Actions workflows:
+
+- `.github/workflows/infra-provisioning-main.yaml` - This is the main pipeline. It should be **manually triggered** from the GitHub Actions tab, while selecting the regions where you want to provision the infrastructure.
+- `.github/workflows/infra-provisioning-region.yaml` - This workflow is automatically called by the main pipeline and provisions the infrastructure for a specific region.
+- `.github/workflows/infra-destroying.yaml` - To be used to destroy your infrastructure.
+
+Feel free to use these pipelines as a starting point for your work. 
+
+Test the pipeline by making changes to your Terraform configurations and observing the provisioning process in AWS.
+
+## Getting started template
+
+Here is a good starting point for `tf/main.tf :
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">=5.0"
+    }
+  }
   
-  Furthermore, if you don't want to manually install Docker in each machine, you can utilize [User Data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html) or create an AMI from a single instance to replicate the setup across others.
-- The service should be highly available. For that, you'll use an **Application Load Balancer (ALB)** that routes the traffic across the instances located in different AZs. 
-  
-  The ALB must have an **HTTPS** listener, as working with **HTTP** [is not allowed](https://core.telegram.org/bots/webhooks) by Telegram. To use HTTPS you need a TLS certificate. You can get it either by:
-  - [Generate a self-signed certificate](https://core.telegram.org/bots/webhooks#a-self-signed-certificate) and import it to the ALB listener. In that case the certificate `Common Name` (`CN`) must be your ALB domain name (E.g. `test-1369101568.eu-central-1.elb.amazonaws.com`), and you must pass the certificate file when setting the webhook in `bot.py` (i.e. `self.telegram_bot_client.set_webhook(..., certificate=open(CERTIFICATE_FILE_NAME, 'r'))`).
-  
-    Or 
+  backend "s3" {
+    bucket = "YOUR_TFSTATE_BUCKET"
+    key    = "path/to/my/key"
+    region = "us-east-1"
+  }
 
-  - Create a subdomain in our shared registered domain. In the domain's Hosted Zone, create an **A alias record** that routes traffic to your ALB. In addition, you need to request a public certificate for your domain address. Since the domain has been issued by Amazon, issuing a certificate [can be easily done with AWS Certificate Manager (ACM)](https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html#request-public-console).
-- [Read Telegram's webhook docs](https://core.telegram.org/bots/webhooks) to get the CIDR of Telegram servers. Since your ALB is publicly accessible, it's better to restrict incoming traffic access to the ALB exclusively to Telegram servers by applying inbound rules to the **Security Group**.
-- Your Telegram token is a sensitive data. It should be stored in [AWS Secret Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html). Create a corresponding secret in Secret Manager, under **Secret type** choose **Other type of secret**.
-- Tip: It's recommended to tag your Polybot instances, so they can be identified during the CI/CD pipline that you'll implement later. E.g. `APP=john-polybot`.
+  required_version = ">= 1.7.0"
+}
 
-## Provision the `yolo5` microservice
-
-![][botaws3]
-
-- The Yolo5 microservice should be running within a `medium` EC2 instance. The service files can be found under `yolo5/`. In `app.py` you'll find a code skeleton that periodically consumes jobs from an **SQS queue**. 
-- **Polybot -> Yolo5 communication:** When the Polybot microservice receives a message from Telegram servers, it uploads the image to the S3 bucket. 
-    Then, instead of talking directly with the Yolo5 microservice using a simple HTTP request, the bot sends a "job" to an SQS queue.
-    The job message contains information regarding the image to be processed, as well as the Telegram `chat_id`.
-    The Yolo5 microservice acts as a consumer, consumes the jobs from the queue, downloads the image from S3, processes the image, and writes the results to a **DynamoDB table** (instead of MongoDB as done in the previous Docker project. Change your code accordingly).
-- **Yolo5 -> Polybot communication:** After writing the results to DynamoDB, the Yolo5 microservice then sends a `POST` HTTP request to the Yolo5 microservice, to `/results?predictionId=<predictionId>`, while `<predictionId>` is the prediction ID of the job the yolo5 worker has just completed. 
-  The request is done via the ALB domain address, but since this is an internal communication between the `yolo5` and the `polybot` microservices, HTTPS is not necessary here. You should create an HTTP listener in your ALB accordingly, and restrict incoming traffic **to instances from within the same VPC only**.
-  The `/results` endpoint in the Polybot microservice then should retrieve the results from DynamoDB and sends them to the end-user Telegram chat by utilizing the `chat_id` value.
-- The Yolo5 microservice should be **auto-scaled**. For that, all Yolo5 instances would be part of an **Auto-scaling Group**. 
-  Create a Launch Template and Autoscaling Group with **desired capacity 1**, and **maximum capacity of 2** (obviously in real-life application it would be more than 2).
-  The automatic scaling based on **CPU utilization**, with a scaling policy triggered when the CPU utilization reaches **60%**.
-- Similarly to the Polybot, the Yolo5 app should be automatically up and running when an instance is being started as part of the ASG, without any manual steps.
-
-## Test your service scalability
-
-1. Send multiple images to your Telegram bot within a short timeframe to simulate increased traffic.
-2. Navigate to the **CloudWatch** console, observe the metrics related to CPU utilization for your Yolo5 instances. You should see a noticeable increase in CPU utilization during the period of increased load.
-3. After ~3 minutes, as the CPU utilization crosses the threshold of 60%, **CloudWatch alarms** will be triggered.
-   Check your ASG size, you should see that the desired capacity increases in response to the increased load.
-4. After approximately 15 minutes of reduced load, CloudWatch alarms for scale-in will be triggered.
-
-## Integrate a simple CI/CD pipeline
-
-We now want to automate the deployment process of the service, both for the Polybot and the Yolo5 microservices.  
-Meaning, when you make code changes locally, then commit and push them, a new version of Docker image is being built and deployed into the designated EC2 instances (either the two instances of the Polybot or all ASG instances of the Yolo5).
-The process has to be **fully automated**. 
-
-While the expected outcome is simple, there are many ways to implement it.
-You are given a skeleton for GitHub Action workflows for the Polybot and the Yolo5 under `.github/workflows/polybot-deployment.yaml` and `.github/workflows/yolo5-deployment.yaml` respectively.
-
-Beyond the provided YAMLs, you are free to design and implement your CI/CD pipeline in any way you see. 
-
-Here are some suggestions:
-
-- **Build phase**: Use GitHub Actions to build and push new version of Docker images to DockerHub or ECR (as done in the previous Docker project).
-- **Build phase**: Use [AWS CodeBuild](https://docs.aws.amazon.com/codebuild/latest/userguide/getting-started-overview.html) to build images. 
-- **Deploy phase**: Create a custom bash script that lists instances of both Polybot and Yolo5 (use tags to do it). For each instance, connect via SSH and execute commands to pull the new version of the Docker image, stop the existing running container, and start the new version of the image.
-- **Deploy phase**: Use [AWS CodeDeploy](https://docs.aws.amazon.com/codedeploy/latest/userguide/welcome.html) to manage the deployment process. 
-- **Deploy phase**: [Create a new Launch Template version](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/manage-launch-template-versions.html) with custom [User Data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html) to run the new image version when a new instance is being launched. Then, perform an [instance refresh](https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html) to update instances in your ASG.
-
-Test your CI/CD pipline for both the Polybot and Yolo5 microservices.
-
-## Submission
-
-You have to present your work to the course staff, in a **10-15 minutes demo**. Your presentations would be evaluated according to the below list, in order of priority:
-
-1. Showcasing a live, working demo of your work.
-2. Demonstrating deep understanding.
-3. Applying best practices and clean work.
-
-
+provider "aws" {
+  region  = var.region
+}
+```
 
 # Good Luck
 
-[DevOpsTheHardWay]: https://github.com/alonitac/DevOpsTheHardWay
-[onboarding_tutorial]: https://github.com/alonitac/DevOpsTheHardWay/blob/main/tutorials/onboarding.md
-[github_actions]: ../../actions
 
-[PolybotServiceDocker]: https://github.com/alonitac/PolybotServiceDocker
-[botaws2]: https://alonitac.github.io/DevOpsTheHardWay/img/aws_project_botaws2.png
-[botaws3]: https://alonitac.github.io/DevOpsTheHardWay/img/aws_project_botaws3.png
+[PolybotServiceAWS]: https://github.com/alonitac/INTPolybotServiceAWS
+[tf_project_regions]: https://alonitac.github.io/DevOpsTheHardWay/img/tf_project_regions.png
