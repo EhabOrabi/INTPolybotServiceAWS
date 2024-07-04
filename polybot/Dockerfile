@@ -5,7 +5,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 COPY . .
-ENV TELEGRAM_APP_URL="https://ehabo-polybot3.int-devops.click"
+ENV TELEGRAM_APP_URL="https://ehabo-polybot4.int-devops.click"
 ENV BUCKET_NAME="ehaborabi-bucket"
 ENV REGION_NAME="eu-west-3"
 ENV SQS_QUEUE_NAME="ehabo-PolybotService-Queue"
