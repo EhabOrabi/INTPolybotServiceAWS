@@ -1,27 +1,16 @@
-
-
-resource "aws_instance" "app_server_1" {
-  ami           = "ami-09d83d8d719da9808"
-  instance_type = "t2.micro"
-  subnet_id     = module.app_vpc.public_subnets[0]
-  security_groups = [aws_security_group.polybotService_sg.id]
-
+resource "aws_instance" "polybot_instance" {
+  count         = 2
+  ami           = var.instance_ami
+  instance_type = var.instance_type
+  subnet_id     = element(var.public_subnet_cidrs, count.index % length(var.public_subnet_cidrs))
+  security_groups = [aws_security_group.polybot_sg.id]
 
   tags = {
-    Name       = "ehabo-PolybotService1-polybot-tf"
+    Name       = "ehabo-polybot-tf"
     Terraform  = "true"
   }
 }
 
-resource "aws_instance" "app_server_2" {
-  ami           = "ami-09d83d8d719da9808"
-  instance_type = "t2.micro"
-  subnet_id     = module.app_vpc.public_subnets[1]
-  security_groups = [aws_security_group.polybotService_sg.id]
-
-  tags = {
-    Name       = "ehabo-PolybotService2-polybot-tf"
-    Terraform  = "true"
-  }
+output "polybot_instance_ids" {
+  value = aws_instance.polybot_instance[*].id
 }
-

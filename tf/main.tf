@@ -1,22 +1,5 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">=5.0"
-    }
-  }
-
-  backend "s3" {
-    bucket = "ehabo-tf-state-files "
-    key    = "path/to/my/key"
-    region = "eu-west-3"
-  }
-
-  required_version = ">= 1.7.0"
-}
-
 provider "aws" {
-  region  = var.region
+  region = var.region
 }
 
 module "app_vpc" {
@@ -24,10 +7,10 @@ module "app_vpc" {
   version = "5.8.1"
 
   name = "ehabo-PolybotServiceVPC-tf"
-  cidr = "10.0.0.0/16"
+  cidr = var.vpc_cidr
 
-  azs             = ["eu-west-3a", "eu-west-3b"]
-  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  azs             = var.azs
+  public_subnets  = var.public_subnet_cidrs
 
   enable_nat_gateway = false
 
@@ -38,7 +21,7 @@ module "app_vpc" {
   }
 }
 
-resource "aws_security_group" "polybotService_sg" {
+resource "aws_security_group" "polybot_sg" {
   name        = "polybot-service-app-server-sg"
   description = "Allow SSH and HTTP traffic"
   vpc_id      = module.app_vpc.vpc_id
@@ -65,36 +48,104 @@ resource "aws_security_group" "polybotService_sg" {
   }
 }
 
-# Internet Gateway
-resource "aws_internet_gateway" "app_igw" {
-  vpc_id = module.app_vpc.vpc_id
+module "polybot" {
+  source         = "./modules/polybot"
+  instance_ami   = var.instance_ami
+  instance_type  = var.instance_type
+  public_subnet_cidrs = []
+}
+
+module "yolo5" {
+  source            = "./modules/yolo5"
+  instance_ami      = var.instance_ami
+  instance_type     = var.instance_type
+  desired_capacity  = var.desired_capacity
+  min_size          = var.min_size
+  max_size          = var.max_size
+  public_subnet_cidrs = []
+}
+
+resource "aws_security_group" "lb_sg" {
+  name        = "lb-sg"
+  description = "Allow HTTP traffic"
+  vpc_id      = module.app_vpc.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb" "app_lb" {
+  name               = "app-lb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.lb_sg.id]
+  subnets            = module.app_vpc.public_subnets
+
+  enable_deletion_protection = false
 
   tags = {
-    Name = "app-igw"
+    Name = "app-lb"
   }
 }
 
-# Route Table
-resource "aws_route_table" "public_route_table" {
-  vpc_id = module.app_vpc.vpc_id
+resource "aws_lb_target_group" "app_tg" {
+  name     = "app-tg"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = module.app_vpc.vpc_id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.app_igw.id
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+    protocol            = "HTTP"
+    matcher             = "200"
   }
 
   tags = {
-    Name = "public-route-table"
+    Name = "app-tg"
   }
 }
 
-# Route Table Association for Public Subnets
-resource "aws_route_table_association" "public_subnet_assoc_1" {
-  subnet_id      = module.app_vpc.public_subnets[0]
-  route_table_id = aws_route_table.public_route_table.id
+resource "aws_lb_target_group_attachment" "polybot_attachment_1" {
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = module.polybot.polybot_instance_ids[0]
+  port             = 8080
 }
 
-resource "aws_route_table_association" "public_subnet_assoc_2" {
-  subnet_id      = module.app_vpc.public_subnets[1]
-  route_table_id = aws_route_table.public_route_table.id
+resource "aws_lb_target_group_attachment" "polybot_attachment_2" {
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = module.polybot.polybot_instance_ids[1]
+  port             = 8080
+}
+
+resource "aws_lb_target_group_attachment" "yolo5_attachment" {
+  for_each = toset(module.yolo5.yolo5_instance_ids)
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = each.value
+  port             = 8080
+}
+
+resource "aws_lb_listener" "app_listener" {
+  load_balancer_arn = aws_lb.app_lb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
 }
