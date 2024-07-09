@@ -43,7 +43,28 @@ variable "instance_type_polybot" {
   default = ""
 }
 
-variable "key_pair_name" {
-  description = "EC2 Key Pair for Paris"
+variable "key_pair_name_polybot" {
+  description = "EC2 Key Pair for polybot Paris"
   default = ""
+}
+
+
+variable "instance_ami_yolo5" {
+  description = "instance ami for the yolo5"
+  default = ""
+}
+
+variable "instance_type_yolo5" {
+  description = "instance type for the yolo5"
+  default = ""
+}
+
+variable "key_pair_name_yolo5" {
+  description = "EC2 Key Pair for yolo5 Paris"
+  default = ""
+}
+
+variable "lb_target_group_arn" {
+  description = "The ARN of the load balancer target group."
+  type        = string
 }

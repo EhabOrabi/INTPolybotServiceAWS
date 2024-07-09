@@ -1,7 +1,7 @@
 resource "aws_instance" "polybot_instance1" {
   ami           = var.instance_ami_polybot
   instance_type = var.instance_type_polybot
-  key_name = var.key_pair_name
+  key_name = var.key_pair_name_polybot
   subnet_id     = var.public_subnet_cidrs[0]
   security_groups = [aws_security_group.polybot_sg.id]
 
@@ -14,7 +14,7 @@ resource "aws_instance" "polybot_instance1" {
 resource "aws_instance" "polybot_instance2" {
   ami           = var.instance_ami_polybot
   instance_type = var.instance_type_polybot
-  key_name = var.key_pair_name
+  key_name = var.key_pair_name_polybot
   subnet_id     = var.public_subnet_cidrs[1]
   security_groups = [aws_security_group.polybot_sg.id]
 

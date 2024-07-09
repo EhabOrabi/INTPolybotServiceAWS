@@ -39,11 +39,27 @@ module "app_vpc" {
 
 module "polybot" {
   source            = "./modules/polybot"
-  vpc_id            = module.app_vpc.vpc_id  # Pass the VPC ID to the module
+  vpc_id            = module.app_vpc.vpc_id
   public_subnet_cidrs = module.app_vpc.public_subnets
   instance_ami_polybot = var.instance_ami_polybot
   instance_type_polybot = var.instance_type_polybot
-  key_pair_name = var.key_pair_name
+  key_pair_name_polybot = var.key_pair_name_polybot
+}
+
+
+
+module "yolo5" {
+  source = "./modules/yolo5"
+
+  instance_ami_yolo5     = var.instance_ami_yolo5
+  instance_type_yolo5    = var.instance_type_yolo5
+  key_pair_name_yolo5    = var.key_pair_name_yolo5
+  vpc_id                 = module.app_vpc.vpc_id
+  public_subnet_ids      = module.app_vpc.public_subnets
+  asg_min_size           = 1
+  asg_max_size           = 3
+  asg_desired_capacity   = 1
+  lb_target_group_arn    = var.lb_target_group_arn
 }
 
 

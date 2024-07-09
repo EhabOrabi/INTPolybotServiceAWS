@@ -16,7 +16,7 @@ variable "instance_type_polybot" {
   type        = string
 }
 
-variable "key_pair_name" {
+variable "key_pair_name_polybot" {
   description = "Key pair name for SSH access."
   type        = string
 }
