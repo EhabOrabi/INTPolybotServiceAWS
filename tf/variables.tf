@@ -27,6 +27,7 @@ variable "public_subnet_cidrs" {
 }
 
 variable "public_subnets" {
+  description = "Public Subnet for PolyBot instances"
   type    = list(string)
   default = ["10.0.101.0/24", "10.0.102.0/24"]
 }
