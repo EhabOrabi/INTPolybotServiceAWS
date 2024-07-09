@@ -1,7 +1,7 @@
 variable "region" {
   description = "AWS region"
   type        = string
-  default     = "eu-west-3"
+  default     = ""
 }
 
 variable "vpc_cidr" {
@@ -10,15 +10,34 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-
-variable "min_size" {
-  description = "Minimum number of instances in the auto-scaling group"
-  type        = number
-  default     = 1
+variable "vpc_azs" {
+  description = "availability zones"
+  default = ""
 }
 
-variable "max_size" {
-  description = "Maximum number of instances in the auto-scaling group"
-  type        = number
-  default     = 2
+variable "availability_zone" {
+  description = "availability zones"
+  default = ""
+}
+
+
+
+variable "public_subnet_cidrs" {
+  default = ""
+}
+
+
+variable "instance_ami_polybot" {
+  description = "instance ami for the polybot"
+  default = ""
+}
+
+variable "instance_type_polybot" {
+  description = "instance type for the polybot"
+  default = ""
+}
+
+variable "key_pair_name" {
+  description = "EC2 Key Pair"
+  default = ""
 }
