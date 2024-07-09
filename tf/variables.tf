@@ -26,6 +26,11 @@ variable "public_subnet_cidrs" {
   default = ""
 }
 
+variable "public_subnets" {
+  type    = list(string)
+  default = ["10.0.101.0/24", "10.0.102.0/24"]
+}
+
 
 variable "instance_ami_polybot" {
   description = "instance ami for the polybot"
@@ -38,6 +43,6 @@ variable "instance_type_polybot" {
 }
 
 variable "key_pair_name" {
-  description = "EC2 Key Pair"
+  description = "EC2 Key Pair for Paris"
   default = ""
 }
