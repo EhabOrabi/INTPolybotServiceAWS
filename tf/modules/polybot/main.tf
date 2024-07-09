@@ -11,6 +11,30 @@ resource "aws_instance" "polybot_instance" {
   }
 }
 
-output "polybot_instance_ids" {
-  value = aws_instance.polybot_instance[*].id
+resource "aws_security_group" "polybot_sg" {
+  name        = "polybot-service-app-server-sg"
+  description = "Allow SSH and HTTP traffic"
+  vpc_id      = module.app_vpc.vpc_id
+
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
