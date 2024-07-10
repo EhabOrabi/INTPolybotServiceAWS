@@ -76,19 +76,13 @@ resource "aws_autoscaling_attachment" "asg_attachment" {
 
 resource "aws_autoscaling_policy" "scale_up_policy" {
   name                   = "scale-up-policy"
-  scaling_adjustment     = 1  // Increase desired capacity by 1 instance
-  adjustment_type        = "ChangeInCapacity"
-  cooldown               = 300  // 5 minutes cooldown period
-  policy_type            = "SimpleScaling"
+  policy_type            = "TargetTrackingScaling"
   autoscaling_group_name = aws_autoscaling_group.yolo5_asg.name
-
-  metric_aggregation_type = "Average"
 
   target_tracking_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
-
     target_value = 60.0  // Scale up if CPU utilization exceeds 60%
   }
 }
