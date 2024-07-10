@@ -21,6 +21,8 @@ resource "aws_launch_template" "yolo5" {
       Terraform = "true"
     }
   }
+
+  user_data = file("${path.module}/user_data.sh")
 }
 
 resource "aws_security_group" "yolo5_sg" {
