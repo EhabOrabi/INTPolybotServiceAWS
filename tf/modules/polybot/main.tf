@@ -5,6 +5,7 @@ resource "aws_instance" "polybot_instance1" {
   subnet_id     = var.public_subnet_cidrs[0]
   security_groups = [aws_security_group.polybot_sg.id]
   associate_public_ip_address = true
+  user_data = base64encode(file("${path.module}/user_data.sh"))
   tags = {
     Name      = "ehabo-PolybotService1-polybot-tf"
     Terraform = "true"
@@ -18,6 +19,7 @@ resource "aws_instance" "polybot_instance2" {
   subnet_id     = var.public_subnet_cidrs[1]
   security_groups = [aws_security_group.polybot_sg.id]
   associate_public_ip_address = true
+  user_data = base64encode(file("${path.module}/user_data.sh"))
   tags = {
     Name      = "ehabo-PolybotService2-polybot-tf"
     Terraform = "true"

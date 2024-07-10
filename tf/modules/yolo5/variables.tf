@@ -40,8 +40,3 @@ variable "asg_desired_capacity" {
   type        = number
   default     = 1
 }
-
-variable "lb_target_group_arn" {
-  description = "The ARN of the load balancer target group."
-  type        = string
-}
