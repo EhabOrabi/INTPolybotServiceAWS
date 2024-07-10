@@ -22,7 +22,7 @@ resource "aws_launch_template" "yolo5" {
     }
   }
 
-  user_data = file("${path.module}/user_data.sh")
+  user_data = base64encode(file("${path.module}/user_data.sh"))
 }
 
 resource "aws_security_group" "yolo5_sg" {
