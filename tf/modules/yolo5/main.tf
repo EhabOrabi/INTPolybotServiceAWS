@@ -73,3 +73,40 @@ resource "aws_autoscaling_attachment" "asg_attachment" {
   autoscaling_group_name = aws_autoscaling_group.yolo5_asg.name
   lb_target_group_arn    = var.lb_target_group_arn
 }
+
+resource "aws_autoscaling_policy" "scale_up_policy" {
+  name                   = "scale-up-policy"
+  scaling_adjustment     = 1  // Increase desired capacity by 1 instance
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300  // 5 minutes cooldown period
+  policy_type            = "SimpleScaling"
+  autoscaling_group_name = aws_autoscaling_group.yolo5_asg.name
+
+  metric_aggregation_type = "Average"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+
+    target_value = 60.0  // Scale up if CPU utilization exceeds 60%
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "scale_up_alarm" {
+  alarm_name          = "scale-up-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120  // 2 minutes
+  statistic           = "Average"
+  threshold           = 70
+  alarm_description   = "Alarm if CPU exceeds 70% for 2 consecutive periods."
+  alarm_actions       = [aws_autoscaling_policy.scale_up_policy.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.yolo5_asg.name
+  }
+}
+
