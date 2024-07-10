@@ -66,10 +66,10 @@ resource "aws_lb" "polybot_alb" {
   }
 }
 
-resource "aws_lb_target_group" "polybot_tg" {
-  name        = "ehabo-polybot-target-group-tf"
-  port        = 8080  // Example port where Polybot instances listen
-  protocol    = "HTTP"
+resource "aws_lb_target_group" "ehabo-polybot_tg_8443" {
+  name        = "polybot-target-group-8443"
+  port        = 8443  // Example port where Polybot instances listen
+  protocol    = "HTTPS"
   vpc_id      = var.vpc_id
 
   health_check {
@@ -81,19 +81,79 @@ resource "aws_lb_target_group" "polybot_tg" {
   }
 
   tags = {
-    Name      = "ehabo-polybot-target-group-tf"
+    Name      = "ehabo-polybot-target-group-8443-tf"
     Terraform = "true"
   }
 }
 
-resource "aws_lb_listener" "polybot_listener" {
+resource "aws_lb_target_group" "polybot_tg_443" {
+  name        = "polybot-target-group-443"
+  port        = 443  // Example port where Polybot instances listen
+  protocol    = "HTTPS"
+  vpc_id      = var.vpc_id
+
+  health_check {
+    path                = "/healthcheck"  // Example health check path
+    interval            = 30
+    timeout             = 10
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name      = "ehabo-polybot-target-group-443-tf"
+    Terraform = "true"
+  }
+}
+
+resource "aws_lb_listener" "polybot_listener_8443" {
   load_balancer_arn = aws_lb.polybot_alb.arn
-  port              = 80
-  protocol          = "HTTP"
+  port              = 8443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+
+  certificate_arn   = ""
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.polybot_tg.arn
+    target_group_arn = aws_lb_target_group.ehabo-polybot_tg_8443.arn
   }
+}
+
+resource "aws_lb_listener" "polybot_listener_443" {
+  load_balancer_arn = aws_lb.polybot_alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+
+  certificate_arn   = ""
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.polybot_tg_443.arn
+  }
+}
+
+resource "aws_lb_target_group_attachment" "polybot_instance1_attachment_8443" {
+  target_group_arn = aws_lb_target_group.ehabo-polybot_tg_8443.arn
+  target_id        = aws_instance.polybot_instance1.id
+  port             = 8443
+}
+
+resource "aws_lb_target_group_attachment" "polybot_instance2_attachment_8443" {
+  target_group_arn = aws_lb_target_group.ehabo-polybot_tg_8443.arn
+  target_id        = aws_instance.polybot_instance2.id
+  port             = 8443
+}
+
+resource "aws_lb_target_group_attachment" "polybot_instance1_attachment_443" {
+  target_group_arn = aws_lb_target_group.polybot_tg_443.arn
+  target_id        = aws_instance.polybot_instance1.id
+  port             = 443
+}
+resource "aws_lb_target_group_attachment" "polybot_instance2_attachment_443" {
+  target_group_arn = aws_lb_target_group.polybot_tg_443.arn
+  target_id        = aws_instance.polybot_instance2.id
+  port             = 443
 }
 
