@@ -36,6 +36,15 @@ module "app_vpc" {
   }
 }
 
+# S3 Bucket
+resource "aws_s3_bucket" "polybot_bucket" {
+  bucket = "ehaborabi-bucket-tf"
+
+  tags = {
+    Name      = "ehaborabi-bucket-tf"
+    Terraform = "true"
+  }
+}
 
 module "polybot" {
   source            = "./modules/polybot"
@@ -44,9 +53,9 @@ module "polybot" {
   instance_ami_polybot = var.instance_ami_polybot
   instance_type_polybot = var.instance_type_polybot
   key_pair_name_polybot = var.key_pair_name_polybot
+  iam_role_name         = var.iam_role_name_polybot
+  TF_VAR_certificate_arn   = var.TF_VAR_certificate_arn
 }
-
-
 
 module "yolo5" {
   source = "./modules/yolo5"
@@ -60,5 +69,3 @@ module "yolo5" {
   asg_max_size           = 2
   asg_desired_capacity   = 1
 }
-
-

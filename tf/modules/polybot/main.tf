@@ -1,11 +1,14 @@
+# EC2 Instances
 resource "aws_instance" "polybot_instance1" {
-  ami           = var.instance_ami_polybot
-  instance_type = var.instance_type_polybot
-  key_name = var.key_pair_name_polybot
-  subnet_id     = var.public_subnet_cidrs[0]
-  security_groups = [aws_security_group.polybot_sg.id]
+  ami                    = var.instance_ami_polybot
+  instance_type          = var.instance_type_polybot
+  key_name               = var.key_pair_name_polybot
+  subnet_id              = var.public_subnet_cidrs[0]
+  security_groups        = [aws_security_group.polybot_sg.id]
   associate_public_ip_address = true
-  user_data = base64encode(file("${path.module}/user_data.sh"))
+  user_data              = base64encode(file("${path.module}/user_data.sh"))
+  iam_instance_profile   = aws_iam_instance_profile.polybot_instance_profile.name
+
   tags = {
     Name      = "ehabo-PolybotService1-polybot-tf"
     Terraform = "true"
@@ -13,29 +16,69 @@ resource "aws_instance" "polybot_instance1" {
 }
 
 resource "aws_instance" "polybot_instance2" {
-  ami           = var.instance_ami_polybot
-  instance_type = var.instance_type_polybot
-  key_name = var.key_pair_name_polybot
-  subnet_id     = var.public_subnet_cidrs[1]
-  security_groups = [aws_security_group.polybot_sg.id]
+  ami                    = var.instance_ami_polybot
+  instance_type          = var.instance_type_polybot
+  key_name               = var.key_pair_name_polybot
+  subnet_id              = var.public_subnet_cidrs[1]
+  security_groups        = [aws_security_group.polybot_sg.id]
   associate_public_ip_address = true
-  user_data = base64encode(file("${path.module}/user_data.sh"))
+  user_data              = base64encode(file("${path.module}/user_data.sh"))
+  iam_instance_profile   = aws_iam_instance_profile.polybot_instance_profile.name
+
   tags = {
     Name      = "ehabo-PolybotService2-polybot-tf"
     Terraform = "true"
   }
 }
 
+# IAM Role and Policies
+resource "aws_iam_role" "polybot_service_role" {
+  name = var.iam_role_name
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "dynamodb_full_access" {
+  role       = aws_iam_role.polybot_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "s3_full_access" {
+  role       = aws_iam_role.polybot_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_manager_rw" {
+  role       = aws_iam_role.polybot_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+}
+
+resource "aws_iam_instance_profile" "polybot_instance_profile" {
+  name = var.iam_role_name
+  role = aws_iam_role.polybot_service_role.name
+}
+
+# Security Group
 resource "aws_security_group" "polybot_sg" {
   name        = "ehabo-polybot-service-app-server-sg-tf"
   description = "Allow SSH and HTTP traffic"
-  vpc_id      = var.vpc_id # Use the VPC ID variable passed from the main configuration
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow SSH access from anywhere"
   }
 
   ingress {
@@ -43,6 +86,31 @@ resource "aws_security_group" "polybot_sg" {
     to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTP traffic from anywhere"
+  }
+
+  ingress {
+    from_port   = 8081
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow application-specific traffic"
+  }
+
+  ingress {
+    from_port   = 8443
+    to_port     = 8443
+    protocol    = "tcp"
+    cidr_blocks = ["91.108.4.0/22"]
+    description = "Allow secure traffic from specific IP range"
+  }
+
+  ingress {
+    from_port   = 8443
+    to_port     = 8443
+    protocol    = "tcp"
+    cidr_blocks = ["149.154.160.0/20"]
+    description = "Allow secure traffic from specific IP range"
   }
 
   egress {
@@ -50,30 +118,33 @@ resource "aws_security_group" "polybot_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
   }
 }
 
+# Load Balancer
 resource "aws_lb" "polybot_alb" {
-  name               = "ehabo-polybot-alb-tf"
+  name               = "ehabo-PolybotServiceLB-tf"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.polybot_sg.id]
   subnets            = var.public_subnet_cidrs
 
   tags = {
-    Name      = "ehabo-polybot-alb-tf"
+    Name      = "ehabo-PolybotServiceLB-tf"
     Terraform = "true"
   }
 }
 
-resource "aws_lb_target_group" "ehabo-polybot_tg_8443" {
-  name        = "polybot-target-group-8443"
-  port        = 8443  // Example port where Polybot instances listen
-  protocol    = "HTTPS"
-  vpc_id      = var.vpc_id
+# Target Group
+resource "aws_lb_target_group" "polybot_tg" {
+  name     = "polybot-target-group"
+  port     = 8443
+  protocol = "HTTPS"
+  vpc_id   = var.vpc_id
 
   health_check {
-    path                = "/healthcheck"  // Example health check path
+    path                = "/healthcheck"
     interval            = 30
     timeout             = 10
     healthy_threshold   = 3
@@ -81,42 +152,22 @@ resource "aws_lb_target_group" "ehabo-polybot_tg_8443" {
   }
 
   tags = {
-    Name      = "ehabo-polybot-target-group-8443-tf"
+    Name      = "ehabo-polybot-target-group-tf"
     Terraform = "true"
   }
 }
 
-resource "aws_lb_target_group" "polybot_tg_443" {
-  name        = "polybot-target-group-443"
-  port        = 443  // Example port where Polybot instances listen
-  protocol    = "HTTPS"
-  vpc_id      = var.vpc_id
-
-  health_check {
-    path                = "/healthcheck"  // Example health check path
-    interval            = 30
-    timeout             = 10
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-  }
-
-  tags = {
-    Name      = "ehabo-polybot-target-group-443-tf"
-    Terraform = "true"
-  }
-}
 
 resource "aws_lb_listener" "polybot_listener_8443" {
   load_balancer_arn = aws_lb.polybot_alb.arn
   port              = 8443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-
-  certificate_arn   = ""
+  certificate_arn   = var.TF_VAR_certificate_arn
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.ehabo-polybot_tg_8443.arn
+    target_group_arn = aws_lb_target_group.polybot_tg.arn
   }
 }
 
@@ -125,35 +176,69 @@ resource "aws_lb_listener" "polybot_listener_443" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-
-  certificate_arn   = ""
+  certificate_arn   = var.TF_VAR_certificate_arn
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.polybot_tg_443.arn
+    target_group_arn = aws_lb_target_group.polybot_tg.arn
   }
 }
 
-resource "aws_lb_target_group_attachment" "polybot_instance1_attachment_8443" {
-  target_group_arn = aws_lb_target_group.ehabo-polybot_tg_8443.arn
+# Target Group Attachments
+resource "aws_lb_target_group_attachment" "polybot_instance1_attachment" {
+  target_group_arn = aws_lb_target_group.polybot_tg.arn
   target_id        = aws_instance.polybot_instance1.id
   port             = 8443
 }
 
-resource "aws_lb_target_group_attachment" "polybot_instance2_attachment_8443" {
-  target_group_arn = aws_lb_target_group.ehabo-polybot_tg_8443.arn
+resource "aws_lb_target_group_attachment" "polybot_instance2_attachment" {
+  target_group_arn = aws_lb_target_group.polybot_tg.arn
   target_id        = aws_instance.polybot_instance2.id
   port             = 8443
 }
 
-resource "aws_lb_target_group_attachment" "polybot_instance1_attachment_443" {
-  target_group_arn = aws_lb_target_group.polybot_tg_443.arn
-  target_id        = aws_instance.polybot_instance1.id
-  port             = 443
-}
-resource "aws_lb_target_group_attachment" "polybot_instance2_attachment_443" {
-  target_group_arn = aws_lb_target_group.polybot_tg_443.arn
-  target_id        = aws_instance.polybot_instance2.id
-  port             = 443
+# SQS Queue and Policy
+resource "aws_sqs_queue" "polybot_queue" {
+  name = "ehabo-PolybotServiceQueue-tf"
+  tags = {
+    Name      = "ehabo-PolybotServiceQueue-tf"
+    Terraform = "true"
+  }
 }
 
+resource "aws_sqs_queue_policy" "polybot_queue_policy" {
+  queue_url = aws_sqs_queue.polybot_queue.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "__default_policy_ID"
+    Statement = [
+      {
+        Sid       = "__owner_statement"
+        Effect    = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::019273956931:root"
+        }
+        Action   = "SQS:*"
+        Resource = aws_sqs_queue.polybot_queue.arn
+      }
+    ]
+  })
+}
+
+
+resource "aws_route53_zone" "main" {
+  name = var.domain_name
+}
+
+resource "aws_route53_record" "www" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.polybot_alb.dns_name
+    zone_id                = aws_lb.polybot_alb.zone_id
+    evaluate_target_health = true
+  }
+}
