@@ -20,3 +20,25 @@ variable "key_pair_name_polybot" {
   description = "Key pair name for SSH access."
   type        = string
 }
+
+variable "iam_role_name" {
+  description = "IAM Role name for the instance"
+  type = string
+  default = "ehabo-role-tf"
+}
+
+variable "TF_VAR_certificate_arn" {
+  description = "ARN of the ACM certificate for HTTPS listener"
+  type        = string
+}
+variable "certificate_arn" {
+  default = ""
+  type        = string
+}
+# Route 53 Records
+variable "domain_name" {
+  description = "domain name for the route 53"
+  type        = string
+  default = "ehabo-polybot4.int-devops.click"
+}
+
