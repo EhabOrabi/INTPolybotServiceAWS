@@ -10,7 +10,7 @@ resource "aws_instance" "polybot_instance1" {
   iam_instance_profile   = aws_iam_instance_profile.polybot_instance_profile.name
 
   tags = {
-    Name      = "ehabo-PolybotService1-polybot-tf"
+    Name      = "ehabo-PolybotService1-tf"
     Terraform = "true"
   }
 }
@@ -26,7 +26,7 @@ resource "aws_instance" "polybot_instance2" {
   iam_instance_profile   = aws_iam_instance_profile.polybot_instance_profile.name
 
   tags = {
-    Name      = "ehabo-PolybotService2-polybot-tf"
+    Name      = "ehabo-PolybotService2-tf"
     Terraform = "true"
   }
 }
@@ -69,7 +69,7 @@ resource "aws_iam_instance_profile" "polybot_instance_profile" {
 
 # Security Group
 resource "aws_security_group" "polybot_sg" {
-  name        = "ehabo-polybot-service-app-server-sg-tf"
+  name        = "ehabo-PolybotService-sg-tf"
   description = "Allow SSH and HTTP traffic"
   vpc_id      = var.vpc_id
 
@@ -113,6 +113,14 @@ resource "aws_security_group" "polybot_sg" {
     description = "Allow secure traffic from specific IP range"
   }
 
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTPS traffic from anywhere"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -121,6 +129,7 @@ resource "aws_security_group" "polybot_sg" {
     description = "Allow all outbound traffic"
   }
 }
+
 
 # Load Balancer
 resource "aws_lb" "polybot_alb" {
@@ -138,8 +147,8 @@ resource "aws_lb" "polybot_alb" {
 
 # Target Group
 resource "aws_lb_target_group" "polybot_tg" {
-  name     = "polybot-target-group"
-  port     = 8443
+  name     = "ehabo-polybot-target-group-tf"
+  port     = 8080
   protocol = "HTTPS"
   vpc_id   = var.vpc_id
 
@@ -162,8 +171,8 @@ resource "aws_lb_listener" "polybot_listener_8443" {
   load_balancer_arn = aws_lb.polybot_alb.arn
   port              = 8443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.TF_VAR_certificate_arn
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.certificate_arn
 
   default_action {
     type             = "forward"
@@ -175,8 +184,8 @@ resource "aws_lb_listener" "polybot_listener_443" {
   load_balancer_arn = aws_lb.polybot_alb.arn
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = var.TF_VAR_certificate_arn
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.certificate_arn
 
   default_action {
     type             = "forward"

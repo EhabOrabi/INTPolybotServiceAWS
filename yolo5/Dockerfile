@@ -7,7 +7,7 @@ RUN curl -L https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5s
 
 ENV BUCKET_NAME="ehaborabi-bucket"
 ENV REGION_NAME="eu-west-3"
-ENV SQS_QUEUE_NAME="ehabo-PolybotService-Queue"
+ENV SQS_QUEUE_NAME="ehabo-PolybotService-Queue-tf"
 COPY . .
 
 CMD ["python3", "app.py"]
