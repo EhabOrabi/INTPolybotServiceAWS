@@ -54,7 +54,7 @@ module "polybot" {
   instance_type_polybot = var.instance_type_polybot
   key_pair_name_polybot = var.key_pair_name_polybot
   iam_role_name         = var.iam_role_name_polybot
-  TF_VAR_certificate_arn   = var.TF_VAR_certificate_arn
+  certificate_arn = var.certificate_arn
 }
 
 module "yolo5" {
@@ -68,4 +68,5 @@ module "yolo5" {
   asg_min_size           = 1
   asg_max_size           = 2
   asg_desired_capacity   = 1
+
 }

@@ -93,6 +93,11 @@ variable "certificate_arn" {
   type        = string
 }
 
+
+variable "TELEGRAM_BOT_TOKEN" {
+  default = ""
+}
+
 variable "aws_lb_target_group" {
   default = ""
 }
