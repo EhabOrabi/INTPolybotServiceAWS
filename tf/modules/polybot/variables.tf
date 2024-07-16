@@ -1,11 +1,10 @@
 variable "vpc_id" {
   description = "The ID of the VPC where the security group should be created."
 }
-variable "public_subnet_cidrs" {
-  description = "List of public subnet CIDRs."
+variable "public_subnet_ids" {
+  description = "The IDs of the public subnets"
   type        = list(string)
 }
-
 variable "instance_ami_polybot" {
   description = "AMI ID for the instance."
   type        = string

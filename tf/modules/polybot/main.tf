@@ -3,7 +3,7 @@ resource "aws_instance" "polybot_instance1" {
   ami                    = var.instance_ami_polybot
   instance_type          = var.instance_type_polybot
   key_name               = var.key_pair_name_polybot
-  subnet_id              = var.public_subnet_cidrs[0]
+  subnet_id              = var.public_subnet_ids[0]
   security_groups        = [aws_security_group.polybot_sg.id]
   associate_public_ip_address = true
   user_data              = base64encode(file("${path.module}/user_data.sh"))
@@ -19,7 +19,7 @@ resource "aws_instance" "polybot_instance2" {
   ami                    = var.instance_ami_polybot
   instance_type          = var.instance_type_polybot
   key_name               = var.key_pair_name_polybot
-  subnet_id              = var.public_subnet_cidrs[1]
+  subnet_id              = var.public_subnet_ids[1]
   security_groups        = [aws_security_group.polybot_sg.id]
   associate_public_ip_address = true
   user_data              = base64encode(file("${path.module}/user_data.sh"))
@@ -69,7 +69,7 @@ resource "aws_iam_instance_profile" "polybot_instance_profile" {
 
 # Security Group
 resource "aws_security_group" "polybot_sg" {
-  name        = "ehabo-PolybotService-sg-tf"
+  name        = "ehabo_polybot_sg-tf"
   description = "Allow SSH and HTTP traffic"
   vpc_id      = var.vpc_id
 
@@ -137,7 +137,7 @@ resource "aws_lb" "polybot_alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.polybot_sg.id]
-  subnets            = var.public_subnet_cidrs
+  subnets            = var.public_subnet_ids
 
   tags = {
     Name      = "ehabo-PolybotServiceLB-tf"

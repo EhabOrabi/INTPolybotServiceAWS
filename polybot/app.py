@@ -12,7 +12,7 @@ app = flask.Flask(__name__)
 
 # TODO load TELEGRAM_TOKEN value from Secret Manager
 def get_secret():
-    secret_name = "TELEGRAM_BOT_TOKEN"
+    secret_name = "telegram_bot_token-tf"
     region_name = os.environ['REGION_NAME']
 
     # Create a Secrets Manager client
@@ -36,7 +36,7 @@ def get_secret():
 secret_json_str = get_secret()
 if secret_json_str:
     secret_dict = json.loads(secret_json_str)
-    TELEGRAM_TOKEN = secret_dict.get('TELEGRAM_BOT_TOKEN')
+    TELEGRAM_TOKEN = secret_dict.get('telegram_bot_token-tf')
 else:
     print("Failed to retrieve the secret")
 
@@ -90,7 +90,7 @@ def results():
                 else:
                     class_counts[class_name] = 1
 
-            #text_results = f"Prediction results for image {item['original_img_path']}:\n"
+            # text_results = f"Prediction results for image {item['original_img_path']}:\n"
             text_results = ""
             for class_name, count in class_counts.items():
                 text_results += f"{class_name}: {count}\n"

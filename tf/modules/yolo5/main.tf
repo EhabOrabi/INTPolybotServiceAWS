@@ -9,7 +9,7 @@ resource "aws_launch_template" "ehabo_yolo5_lt-tf" {
 
   network_interfaces {
     associate_public_ip_address = true
-    security_groups             = [aws_security_group.ehabo_yolo5_sg_tf.id]
+    security_groups             = [aws_security_group.yolo5_sg.id]
   }
 
   lifecycle {
@@ -25,7 +25,7 @@ resource "aws_launch_template" "ehabo_yolo5_lt-tf" {
    user_data = base64encode(file("${path.module}/user_data.sh"))
 }
 # Security Group for the instances
-resource "aws_security_group" "ehabo_yolo5_sg_tf" {
+resource "aws_security_group" "yolo5_sg" {
   name        = "ehabo_yolo5_sg-tf"
   description = "Security group for YOLO5 instances"
   vpc_id      = var.vpc_id
@@ -57,9 +57,57 @@ resource "aws_security_group" "ehabo_yolo5_sg_tf" {
 }
 
 
+resource "aws_autoscaling_policy" "scale_out" {
+  name                   = "yolo5-scale-out"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = var.scale_out_cooldown
+  autoscaling_group_name = aws_autoscaling_group.yolo5_asg.name
+}
+
+
+resource "aws_autoscaling_policy" "scale_in" {
+  name                   = "yolo5-scale-in"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = var.scale_in_cooldown
+  autoscaling_group_name = aws_autoscaling_group.yolo5_asg.name
+}
+
+
+resource "aws_cloudwatch_metric_alarm" "high_cpu" {
+  alarm_name          = "yolo5-high-cpu"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.cpu_utilization_high_threshold
+  alarm_actions       = [aws_autoscaling_policy.scale_out.arn]
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.yolo5_asg.name
+  }
+}
+
+
+resource "aws_cloudwatch_metric_alarm" "low_cpu" {
+  alarm_name          = "yolo5-low-cpu"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.cpu_utilization_low_threshold
+  alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.yolo5_asg.name
+  }
+}
 
 # Auto Scaling Group
-resource "aws_autoscaling_group" "ehabo_yolo5_asg_tf" {
+resource "aws_autoscaling_group" "yolo5_asg" {
   desired_capacity     = var.asg_desired_capacity
   max_size             = var.asg_max_size
   min_size             = var.asg_min_size
@@ -82,7 +130,7 @@ resource "aws_autoscaling_group" "ehabo_yolo5_asg_tf" {
 }
 
 # Define DynamoDB table
-resource "aws_dynamodb_table" "ehabo-PolybotService-DynamoDB" {
+resource "aws_dynamodb_table" "PolybotService-DynamoDB" {
   name           = "ehabo-PolybotService-DynamoDB-tf"
   billing_mode   = "PROVISIONED"
   read_capacity  = 1

@@ -10,11 +10,6 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "vpc_azs" {
-  description = "availability zones"
-  default = ""
-}
-
 variable "availability_zone" {
   description = "availability zones"
   default = ""
@@ -32,9 +27,6 @@ variable "dynamodb_table_name" {
   default     = "polybot_predictions"
 }
 
-variable "public_subnet_cidrs" {
-  default = ""
-}
 
 variable "public_subnets" {
   description = "Public Subnet for PolyBot instances"
@@ -94,10 +86,24 @@ variable "certificate_arn" {
 }
 
 
-variable "TELEGRAM_BOT_TOKEN" {
+variable "aws_lb_target_group" {
   default = ""
 }
 
-variable "aws_lb_target_group" {
+variable "cpu_utilization_high_threshold" {
+  default = ""
+}
+variable "cpu_utilization_low_threshold" {
+  default = ""
+}
+variable "scale_out_cooldown" {
+  default = ""
+}
+variable "scale_in_cooldown" {
+  default = ""
+}
+variable "telegram_token" {
+  description = "Telegram Token"
+  type = string
   default = ""
 }

@@ -60,3 +60,28 @@ variable "dynamodb_billing_mode" {
 variable "iam_instance_profile_name" {
   default = ""
 }
+
+
+variable "cpu_utilization_high_threshold" {
+  description = "High CPU utilization threshold for scaling out"
+  type        = number
+  default     = 60  # Adjust as needed
+}
+
+variable "cpu_utilization_low_threshold" {
+  description = "Low CPU utilization threshold for scaling in"
+  type        = number
+  default     = 30  # Adjust as needed
+}
+
+variable "scale_out_cooldown" {
+  description = "Cooldown period in seconds for scale-out actions"
+  type        = number
+  default     = 300  # Example: 5 minutes (adjust as needed)
+}
+
+variable "scale_in_cooldown" {
+  description = "Cooldown period in seconds for scale-in actions"
+  type        = number
+  default     = 300  # Example: 5 minutes (adjust as needed)
+}
