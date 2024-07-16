@@ -23,7 +23,7 @@ variable "key_pair_name_polybot" {
 variable "iam_role_name" {
   description = "IAM Role name for the instance"
   type = string
-  default = "ehabo-role-tf"
+  default = "ehabo-polybot-role-tf"
 }
 
 variable "certificate_arn" {
@@ -34,6 +34,12 @@ variable "certificate_arn" {
 variable "domain_name" {
   description = "domain name for the route 53"
   type        = string
-  default = "ehabo-polybot4.int-devops.click"
+  default = "int-devops.click"
+}
+
+variable "region" {
+  description = "region for the polybot"
+  type = string
+  default = ""
 }
 

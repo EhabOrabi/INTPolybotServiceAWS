@@ -18,7 +18,7 @@ variable "availability_zone" {
 variable "iam_role_name_polybot" {
   description = "The name of the IAM role for the Polybot instance"
   type        = string
-  default     = "polybot-role"
+  default     = "ehabo-polybot-role-tf"
 }
 
 variable "dynamodb_table_name" {

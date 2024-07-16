@@ -12,7 +12,7 @@ app = flask.Flask(__name__)
 
 # TODO load TELEGRAM_TOKEN value from Secret Manager
 def get_secret():
-    secret_name = "telegram_bot_token-tf"
+    secret_name = "ehabo_telegram_token_key-tf"
     region_name = os.environ['REGION_NAME']
 
     # Create a Secrets Manager client
@@ -36,7 +36,7 @@ def get_secret():
 secret_json_str = get_secret()
 if secret_json_str:
     secret_dict = json.loads(secret_json_str)
-    TELEGRAM_TOKEN = secret_dict.get('telegram_bot_token-tf')
+    TELEGRAM_TOKEN = secret_dict.get('ehabo_telegram_token_key-tf')
 else:
     print("Failed to retrieve the secret")
 
@@ -65,7 +65,7 @@ def results():
     # TODO use the prediction_id to retrieve results from DynamoDB and send to the end-user
     region_name = os.environ['REGION_NAME']
     dynamodb = boto3.resource('dynamodb', region_name=region_name)
-    table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
+    table = dynamodb.Table('ehabo-PolybotService-DynamoDB-tf')
 
     logger.info("Received request at /results endpoint")
     try:

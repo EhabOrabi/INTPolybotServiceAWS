@@ -94,21 +94,21 @@ resource "aws_s3_bucket" "polybot_bucket" {
 
 
 resource "aws_secretsmanager_secret" "telegram_token" {
-  name = "telegram_bot_token-tf"  # Replace with your desired secret name
+  name = "telegram_token_ehabo"  # Replace with your desired secret name
 
-  description = "Example secret created via Terraform"
+  description = "Telegram bot token"
 
   # Optionally specify tags for your secret
   tags = {
     Environment = "DevOps Learning"
-    Owner       = "DevOps Team"
+    Owner       = "Ehab Orabi"
     Project     = "Terraform Project"
   }
 }
 resource "aws_secretsmanager_secret_version" "example_secret_version" {
   secret_id     = aws_secretsmanager_secret.telegram_token.id
   secret_string = jsonencode({
-    key1        = var.telegram_token
+    ehabo_telegram_token_key-tf = var.telegram_token
   })
 }
 

@@ -7,6 +7,10 @@ resource "aws_launch_template" "ehabo_yolo5_lt-tf" {
 
   key_name = var.key_pair_name_yolo5
 
+  iam_instance_profile {
+    name = aws_iam_instance_profile.yolo5_instance_profile.name
+  }
+
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = [aws_security_group.yolo5_sg.id]
@@ -184,6 +188,6 @@ resource "aws_iam_role_policy_attachment" "secretsmanager_policy" {
 }
 
 resource "aws_iam_instance_profile" "yolo5_instance_profile" {
-  name = "yolo5-instance-profile"
+  name = "ehabo-yolo5-instance-profile"
   role = aws_iam_role.yolo5_role.name
 }

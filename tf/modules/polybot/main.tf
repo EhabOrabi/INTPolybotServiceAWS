@@ -57,10 +57,16 @@ resource "aws_iam_role_policy_attachment" "s3_full_access" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "sqs_full_access" {
+  role       = aws_iam_role.polybot_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+}
+
 resource "aws_iam_role_policy_attachment" "secrets_manager_rw" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
 }
+
 
 resource "aws_iam_instance_profile" "polybot_instance_profile" {
   name = var.iam_role_name
@@ -119,6 +125,14 @@ resource "aws_security_group" "polybot_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow HTTPS traffic from anywhere"
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
   }
 
   egress {
@@ -235,14 +249,13 @@ resource "aws_sqs_queue_policy" "polybot_queue_policy" {
   })
 }
 
-
 resource "aws_route53_zone" "main" {
   name = var.domain_name
 }
 
 resource "aws_route53_record" "www" {
   zone_id = aws_route53_zone.main.zone_id
-  name    = "www.${var.domain_name}"
+  name    = "https://ehabo-polybot4.${var.domain_name}"
   type    = "A"
 
   alias {
