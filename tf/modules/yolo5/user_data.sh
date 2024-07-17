@@ -19,7 +19,13 @@ echo \
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-sudo usermod -aG docker $USER
-
-# Run the Docker container
-docker run -d --name yolo5 ehab215/yolo5:latest
+# Get the region (modify this part as needed to get the region from your source)
+region=$(aws configure get region 2>/dev/null)
+# Check if the region is eu-west-3 and run the corresponding command
+if [ "$region" == "eu-west-3" ]; then
+   # Run the Docker container
+  docker run -d --name yolo5 ehab215/yolo5:latest
+else
+  # need to run container for Ohio
+  echo "Region is not eu-west-3, running another command..."
+fi
