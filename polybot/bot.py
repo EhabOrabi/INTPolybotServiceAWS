@@ -17,23 +17,24 @@ class Bot:
         # create a new instance of the TeleBot class.
         # all communication with Telegram servers are done using self.telegram_bot_client
         self.telegram_bot_client = telebot.TeleBot(token)
+        # logger.info(f"Token: {token}")
+        # logger.info(f"Telegram Chat URL: {telegram_chat_url}")
+        try:
+            self.telegram_bot_client.remove_webhook()
+            logger.info("Webhook removed successfully.")
+        except Exception as e:
+            logger.error(f"Error removing webhook: {e}")
 
-        logger.info("#################################### DEBUG0 #######################################")
-
-        # remove any existing webhooks configured in Telegram servers
-        self.telegram_bot_client.remove_webhook()
         time.sleep(0.5)
-        logger.info("#################################### DEBUG1 #######################################")
         # set the webhook URL
+        try:
+            response = requests.get(f'{telegram_chat_url}/{token}/')
+            logger.info(f"Response status code: {response.status_code}")
 
-        logger.info("#################################### DEBUG2 #######################################")
-
-        response = requests.get(f'{telegram_chat_url}/{token}/')
-        logger.info(response.status_code)
-
-        self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
-        logger.info("#################################### DEBUG3 #######################################")
-        print("Webhook set successfully.")
+            self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
+            logger.info("Webhook set successfully.")
+        except Exception as e:
+            logger.error(f"Error setting webhook: {e}")
 
         logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
 

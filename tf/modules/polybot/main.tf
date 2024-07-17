@@ -232,6 +232,7 @@ resource "aws_sqs_queue" "polybot_queue" {
 resource "aws_sqs_queue_policy" "polybot_queue_policy" {
   queue_url = aws_sqs_queue.polybot_queue.id
 
+
   policy = jsonencode({
     Version = "2012-10-17"
     Id      = "__default_policy_ID"
@@ -249,18 +250,3 @@ resource "aws_sqs_queue_policy" "polybot_queue_policy" {
   })
 }
 
-resource "aws_route53_zone" "main" {
-  name = var.domain_name
-}
-
-resource "aws_route53_record" "www" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "https://ehabo-polybot4.${var.domain_name}"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.polybot_alb.dns_name
-    zone_id                = aws_lb.polybot_alb.zone_id
-    evaluate_target_health = true
-  }
-}
