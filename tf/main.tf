@@ -92,9 +92,8 @@ resource "aws_s3_bucket" "polybot_bucket" {
   }
 }
 
-
 resource "aws_secretsmanager_secret" "telegram_token" {
-  name = "ehabo_telegram_token_tf"  # Replace with your desired secret name
+  name = "ehabo_telegram_token_tf8"  # Replace with your desired secret name
   description = "Telegram bot token"
 
   # Optionally specify tags for your secret
@@ -107,7 +106,7 @@ resource "aws_secretsmanager_secret" "telegram_token" {
 resource "aws_secretsmanager_secret_version" "example_secret_version" {
   secret_id     = aws_secretsmanager_secret.telegram_token.id
   secret_string = jsonencode({
-    ehabo2_telegram_token_tf = var.telegram_token
+    ehabo_telegram_token_tf8 = var.telegram_token
   })
 }
 

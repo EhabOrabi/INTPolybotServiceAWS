@@ -27,14 +27,9 @@ variable "iam_role_name" {
 }
 
 variable "certificate_arn" {
+  description = "certificate arn"
   default = ""
   type        = string
-}
-# Route 53 Records
-variable "domain_name" {
-  description = "domain name for the route 53"
-  type        = string
-  default = "int-devops.click"
 }
 
 variable "region" {

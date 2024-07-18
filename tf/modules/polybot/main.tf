@@ -162,12 +162,12 @@ resource "aws_lb" "polybot_alb" {
 # Target Group
 resource "aws_lb_target_group" "polybot_tg" {
   name     = "ehabo-polybot-target-group-tf"
-  port     = 8080
-  protocol = "HTTPS"
+  port     = 8443
+  protocol = "HTTP"
   vpc_id   = var.vpc_id
 
   health_check {
-    path                = "/healthcheck"
+    path                = "/health_check"
     interval            = 30
     timeout             = 10
     healthy_threshold   = 3
@@ -204,6 +204,18 @@ resource "aws_lb_listener" "polybot_listener_443" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.polybot_tg.arn
+  }
+}
+
+resource "aws_route53_record" "subdomain" {
+  zone_id = "Z01194351X4YEXPPLZ8MN"
+  name    = "ehabo-polybot6.int-devops.click"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.polybot_alb.dns_name
+    zone_id                = aws_lb.polybot_alb.zone_id
+    evaluate_target_health = true
   }
 }
 

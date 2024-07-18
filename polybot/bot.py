@@ -17,8 +17,8 @@ class Bot:
         # create a new instance of the TeleBot class.
         # all communication with Telegram servers are done using self.telegram_bot_client
         self.telegram_bot_client = telebot.TeleBot(token)
-        # logger.info(f"Token: {token}")
-        # logger.info(f"Telegram Chat URL: {telegram_chat_url}")
+        logger.info(f"Token: {token}")
+        logger.info(f"Telegram Chat URL: {telegram_chat_url}")
         try:
             self.telegram_bot_client.remove_webhook()
             logger.info("Webhook removed successfully.")
