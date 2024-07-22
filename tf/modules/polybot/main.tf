@@ -207,18 +207,6 @@ resource "aws_lb_listener" "polybot_listener_443" {
   }
 }
 
-resource "aws_route53_record" "subdomain" {
-  zone_id = "Z01194351X4YEXPPLZ8MN"
-  name    = "ehabo-polybot6.int-devops.click"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.polybot_alb.dns_name
-    zone_id                = aws_lb.polybot_alb.zone_id
-    evaluate_target_health = true
-  }
-}
-
 # Target Group Attachments
 resource "aws_lb_target_group_attachment" "polybot_instance1_attachment" {
   target_group_arn = aws_lb_target_group.polybot_tg.arn
@@ -243,7 +231,6 @@ resource "aws_sqs_queue" "polybot_queue" {
 
 resource "aws_sqs_queue_policy" "polybot_queue_policy" {
   queue_url = aws_sqs_queue.polybot_queue.id
-
 
   policy = jsonencode({
     Version = "2012-10-17"

@@ -5,9 +5,9 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN curl -L https://github.com/ultralytics/yolov5/releases/download/v6.1/yolov5s.pt -o yolov5s.pt
 
-ENV BUCKET_NAME="ehaborabi-bucket"
+ENV BUCKET_NAME="ehaborabi-bucket-tf"
 ENV REGION_NAME="eu-west-3"
-ENV SQS_QUEUE_NAME="ehabo-PolybotService-Queue-tf"
+ENV SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-tf"
 COPY . .
 
 CMD ["python3", "app.py"]

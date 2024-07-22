@@ -92,8 +92,9 @@ resource "aws_s3_bucket" "polybot_bucket" {
   }
 }
 
+
 resource "aws_secretsmanager_secret" "telegram_token" {
-  name = "ehabo_telegram_token_tf8"  # Replace with your desired secret name
+  name = var.secret_name  # Replace with your desired secret name
   description = "Telegram bot token"
 
   # Optionally specify tags for your secret
@@ -106,7 +107,7 @@ resource "aws_secretsmanager_secret" "telegram_token" {
 resource "aws_secretsmanager_secret_version" "example_secret_version" {
   secret_id     = aws_secretsmanager_secret.telegram_token.id
   secret_string = jsonencode({
-    ehabo_telegram_token_tf8 = var.telegram_token
+    ehabo_telegram_token_tf9 = var.telegram_token
   })
 }
 
@@ -134,7 +135,7 @@ module "yolo5" {
   asg_min_size           = 1
   asg_max_size           = 2
   asg_desired_capacity   = 1
- cpu_utilization_high_threshold = 60  # Example: Set your desired thresholds
+  cpu_utilization_high_threshold = 60  # Example: Set your desired thresholds
   cpu_utilization_low_threshold  = 30  # Example: Set your desired thresholds
   scale_out_cooldown         = 300  # Example: Set your cooldown periods
   scale_in_cooldown          = 300  # Example: Set your cooldown periods

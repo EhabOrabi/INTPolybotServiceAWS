@@ -28,13 +28,5 @@ variable "iam_role_name" {
 
 variable "certificate_arn" {
   description = "certificate arn"
-  default = ""
   type        = string
 }
-
-variable "region" {
-  description = "region for the polybot"
-  type = string
-  default = ""
-}
-
