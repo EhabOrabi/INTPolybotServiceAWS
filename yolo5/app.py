@@ -102,13 +102,13 @@ def consume():
 
                 dynamodb = boto3.resource('dynamodb', region_name=region_name)
                 logger.info({dynamodb})
-                table = dynamodb.Table('ehabo-PolybotService-DynamoDB')
+                table = dynamodb.Table('ehabo-PolybotService-DynamoDB-tf')
                 logger.info({table})
                 table.put_item(Item=prediction_summary)
 
                 # Send the message from my yolo5 to load balancer:
                 try:
-                    response = requests.post(f'{"https://ehabo-polybot5.int-devops.click/results"}', params={'predictionId': prediction_id})
+                    response = requests.post(f'{"https://ehabo-polybot9.int-devops.click/results"}', params={'predictionId': prediction_id})
                     response.raise_for_status()  # Raise an error for bad status codes
                     logger.info(f'prediction: {prediction_id}. Notified Polybot microservice successfully')
                 except requests.exceptions.RequestException as e:

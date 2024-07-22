@@ -158,10 +158,9 @@ class ObjectDetectionBot(Bot):
                                 QueueUrl=sqs_queue_url,
                                 MessageBody=json.dumps(json_data)
                             )
-                            #logger.info(msg['chat']['id'], f"Job sent to queue. PredictionId: {prediction_id}")
                         except Exception as e:
                             logger.error(f'Error: {str(e)}')
-                            self.send_text(msg.chat.id, 'Failed to process the image. Please try again later.')
+                            self.send_text(msg['chat']['id'], 'Failed to process the image. Please try again later.')
                     else:
                         self.send_text(msg['chat']['id'],"Error invalid caption\n Available captions are :\n1) Blur\n2) Mix\n3) Salt and pepper\n4) Contour\n5) Predict")
                 except Exception as e:

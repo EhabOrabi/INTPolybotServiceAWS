@@ -9,6 +9,6 @@ instance_type_yolo5 = "t2.medium"
 key_pair_name_yolo5 = "ehabo-key-paris"
 certificate_arn   = ""
 telegram_token = ""
-lb_target_group_arn = ""
+secret_name = ""
 
 

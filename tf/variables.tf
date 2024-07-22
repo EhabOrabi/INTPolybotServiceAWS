@@ -1,7 +1,6 @@
 variable "region" {
   description = "AWS region"
   type        = string
-  default     = "eu-west-3"
 }
 
 variable "vpc_cidr" {
@@ -70,24 +69,9 @@ variable "key_pair_name_yolo5" {
   default = ""
 }
 
-variable "lb_target_group_arn" {
-  description = "The ARN of the load balancer target group."
-  type        = string
-}
-
-variable "TF_VAR_certificate_arn" {
-  description = "ARN of the ACM certificate for HTTPS listener"
-  type        = string
-  default = ""
-}
 variable "certificate_arn" {
   description = "The ARN of the ACM certificate for HTTPS"
   type        = string
-}
-
-
-variable "aws_lb_target_group" {
-  default = ""
 }
 
 variable "cpu_utilization_high_threshold" {
@@ -105,5 +89,9 @@ variable "scale_in_cooldown" {
 variable "telegram_token" {
   description = "Telegram Token"
   type = string
-  default = ""
+}
+
+variable "secret_name" {
+  description = "secret name of telegram token"
+  type = string
 }
