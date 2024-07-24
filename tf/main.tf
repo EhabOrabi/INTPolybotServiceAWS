@@ -82,12 +82,15 @@ resource "aws_subnet" "public2" {
   }
 }
 
-# S3 Bucket
-resource "aws_s3_bucket" "polybot_bucket" {
-  bucket = "ehaborabi-bucket-tf"
 
+resource "aws_s3_bucket" "polybot_bucket" {
+  bucket = var.bucket_name
+
+  lifecycle {
+    ignore_changes = [bucket]
+  }
   tags = {
-    Name      = "ehaborabi-bucket-tf"
+    Name      = var.bucket_name
     Terraform = "true"
   }
 }
@@ -107,7 +110,7 @@ resource "aws_secretsmanager_secret" "telegram_token" {
 resource "aws_secretsmanager_secret_version" "example_secret_version" {
   secret_id     = aws_secretsmanager_secret.telegram_token.id
   secret_string = jsonencode({
-    ehabo_telegram_token_tf9 = var.telegram_token
+    token = var.telegram_token
   })
 }
 
@@ -121,6 +124,7 @@ module "polybot" {
   key_pair_name_polybot = var.key_pair_name_polybot
   iam_role_name         = var.iam_role_name_polybot
   certificate_arn       = var.certificate_arn
+  my_queue              = var.my_queue
 }
 
 

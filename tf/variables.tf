@@ -49,23 +49,32 @@ variable "key_pair_name_polybot" {
   default = ""
 }
 
+# S3 Bucket
+variable "bucket_name" {
+  description = "S3 Bucket"
+  type = string
+}
+
 variable "my_queue" {
-  description = "queue"
-  default = ""
+  description = "polybot queue"
+  type = string
 }
 
 variable "instance_ami_yolo5" {
   description = "instance ami for the yolo5"
+  type = string
   default = ""
 }
 
 variable "instance_type_yolo5" {
   description = "instance type for the yolo5"
+  type = string
   default = ""
 }
 
 variable "key_pair_name_yolo5" {
   description = "EC2 Key Pair for yolo5 Paris"
+  type = string
   default = ""
 }
 

@@ -9,7 +9,10 @@ variable "instance_ami_polybot" {
   description = "AMI ID for the instance."
   type        = string
 }
-
+variable "my_queue" {
+  description = "polybot queue"
+  type = string
+}
 variable "instance_type_polybot" {
   description = "Instance type for the instance."
   type        = string

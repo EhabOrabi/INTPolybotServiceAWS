@@ -9,10 +9,15 @@ import yaml
 from loguru import logger
 import os
 import boto3
+from urllib.parse import urljoin
 
 images_bucket = os.environ['BUCKET_NAME']
 queue_name = os.environ['SQS_QUEUE_NAME']
 region_name = os.environ['REGION_NAME']
+TELEGRAM_APP_URL = os.environ['TELEGRAM_APP_URL']
+logger.info(f'TELEGRAM_APP_URL: {TELEGRAM_APP_URL}.')
+if TELEGRAM_APP_URL is None or TELEGRAM_APP_URL.strip() == "":
+    raise ValueError("TELEGRAM_APP_URL environment variable is not set or is empty.")
 
 sqs_client = boto3.client('sqs', region_name=region_name)
 
@@ -105,10 +110,10 @@ def consume():
                 table = dynamodb.Table('ehabo-PolybotService-DynamoDB-tf')
                 logger.info({table})
                 table.put_item(Item=prediction_summary)
-
+                full_url = urljoin(TELEGRAM_APP_URL, 'results')
                 # Send the message from my yolo5 to load balancer:
                 try:
-                    response = requests.post(f'{"https://ehabo-polybot9.int-devops.click/results"}', params={'predictionId': prediction_id})
+                    response = requests.post(f'{full_url}', params={'predictionId': prediction_id})
                     response.raise_for_status()  # Raise an error for bad status codes
                     logger.info(f'prediction: {prediction_id}. Notified Polybot microservice successfully')
                 except requests.exceptions.RequestException as e:

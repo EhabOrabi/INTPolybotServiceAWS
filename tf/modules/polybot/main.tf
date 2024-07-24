@@ -45,32 +45,62 @@ resource "aws_iam_role" "polybot_service_role" {
       Action = "sts:AssumeRole"
     }]
   })
+   lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "dynamodb_full_access" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+  lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+  lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "sqs_full_access" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+  lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "secrets_manager_rw" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+  lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 
 resource "aws_iam_instance_profile" "polybot_instance_profile" {
   name = var.iam_role_name
   role = aws_iam_role.polybot_service_role.name
+    lifecycle {
+    ignore_changes = [role]
+  }
 }
 
 # Security Group
@@ -222,7 +252,7 @@ resource "aws_lb_target_group_attachment" "polybot_instance2_attachment" {
 
 # SQS Queue and Policy
 resource "aws_sqs_queue" "polybot_queue" {
-  name = "ehabo-PolybotServiceQueue-tf"
+  name = var.my_queue
   tags = {
     Name      = "ehabo-PolybotServiceQueue-tf"
     Terraform = "true"

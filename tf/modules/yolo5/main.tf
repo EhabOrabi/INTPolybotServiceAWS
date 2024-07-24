@@ -165,29 +165,59 @@ resource "aws_iam_role" "yolo5_role" {
       }
     ]
   })
+    lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "dynamodb_policy" {
   role       = aws_iam_role.yolo5_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+    lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "s3_policy" {
   role       = aws_iam_role.yolo5_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+    lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "sqs_policy" {
   role       = aws_iam_role.yolo5_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+    lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "secretsmanager_policy" {
   role       = aws_iam_role.yolo5_role.name
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+    lifecycle {
+    ignore_changes = [
+      # Ignore policy ARN changes if it's updated externally
+      policy_arn
+    ]
+  }
 }
 
 resource "aws_iam_instance_profile" "yolo5_instance_profile" {
   name = "ehabo-yolo5-instance-profile"
   role = aws_iam_role.yolo5_role.name
+    lifecycle {
+    ignore_changes = [role]
+  }
 }

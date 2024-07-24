@@ -1,6 +1,6 @@
 import json
 import uuid
-
+import logging
 import requests
 import telebot
 from loguru import logger
@@ -10,15 +10,18 @@ from telebot.types import InputFile
 from img_proc import Img
 import boto3
 
+# Setup loguru logger
+logger.add("debug.log", format="{time} {level} {message}", level="DEBUG", rotation="10 MB")
+
 
 class Bot:
 
     def __init__(self, token, telegram_chat_url):
-        # create a new instance of the TeleBot class.
-        # all communication with Telegram servers are done using self.telegram_bot_client
         self.telegram_bot_client = telebot.TeleBot(token)
         logger.info(f"Token: {token}")
         logger.info(f"Telegram Chat URL: {telegram_chat_url}")
+
+        # Remove existing webhook
         try:
             self.telegram_bot_client.remove_webhook()
             logger.info("Webhook removed successfully.")
@@ -26,17 +29,38 @@ class Bot:
             logger.error(f"Error removing webhook: {e}")
 
         time.sleep(0.5)
-        # set the webhook URL
-        try:
-            response = requests.get(f'{telegram_chat_url}/{token}/')
-            logger.info(f"Response status code: {response.status_code}")
 
+        # Check URL accessibility with retries
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(f'{telegram_chat_url}/{token}/', timeout=10)
+                if response.status_code == 200:
+                    logger.info(f"Response status code: {response.status_code}")
+                    break
+                else:
+                    logger.error(f"Webhook URL check failed with status code: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Attempt {attempt + 1} - Error checking webhook URL: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)  # Exponential backoff
+                else:
+                    logger.error("Max retries exceeded. Unable to check webhook URL.")
+                    return
+
+        # Set the webhook URL
+        try:
             self.telegram_bot_client.set_webhook(url=f'{telegram_chat_url}/{token}/', timeout=60)
             logger.info("Webhook set successfully.")
         except Exception as e:
             logger.error(f"Error setting webhook: {e}")
 
-        logger.info(f'Telegram Bot information\n\n{self.telegram_bot_client.get_me()}')
+        # Log bot information
+        try:
+            bot_info = self.telegram_bot_client.get_me()
+            logger.info(f'Telegram Bot information\n\n{bot_info}')
+        except Exception as e:
+            logger.error(f"Error getting bot information: {e}")
 
     def send_text(self, chat_id, text):
         self.telegram_bot_client.send_message(chat_id, text)
