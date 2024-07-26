@@ -11,5 +11,9 @@ REGION=${AVAILABILITY_ZONE%?}
 
 # Export the region as an environment variable
 export REGION_NAME=$REGION
+export BUCKET_NAME="ehaborabi-bucket-$REGION-tf"
+export TELEGRAM_APP_URL="https://ehabo-polybot-$REGION.int-devops.click"
 
-echo "Region: $REGION"
+#echo "Bucket Name: $BUCKET_NAME"
+#echo "Region: $REGION"
+#echo "Telegram App Url: $TELEGRAM_APP_URL"

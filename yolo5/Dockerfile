@@ -24,9 +24,8 @@ COPY start.sh /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/get_current_region.sh /usr/src/app/start.sh
 
 # Set default environment variables
-ENV BUCKET_NAME="ehaborabi-bucket-tf"
 ENV SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-tf"
-ENV TELEGRAM_APP_URL="https://ehabo-polybot10.int-devops.click"
+
 
 # Run the start script
 CMD ["/usr/src/app/start.sh"]

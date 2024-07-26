@@ -95,12 +95,4 @@ variable "scale_out_cooldown" {
 variable "scale_in_cooldown" {
   default = ""
 }
-variable "telegram_token" {
-  description = "Telegram Token"
-  type = string
-}
 
-variable "secret_name" {
-  description = "secret name of telegram token"
-  type = string
-}

@@ -85,35 +85,11 @@ resource "aws_subnet" "public2" {
 
 resource "aws_s3_bucket" "polybot_bucket" {
   bucket = var.bucket_name
-
-  lifecycle {
-    ignore_changes = [bucket]
-  }
   tags = {
     Name      = var.bucket_name
     Terraform = "true"
   }
 }
-
-
-resource "aws_secretsmanager_secret" "telegram_token" {
-  name = var.secret_name  # Replace with your desired secret name
-  description = "Telegram bot token"
-
-  # Optionally specify tags for your secret
-  tags = {
-    Environment = "DevOps Learning"
-    Owner       = "Ehab Orabi"
-    Project     = "Terraform Project"
-  }
-}
-resource "aws_secretsmanager_secret_version" "example_secret_version" {
-  secret_id     = aws_secretsmanager_secret.telegram_token.id
-  secret_string = jsonencode({
-    token = var.telegram_token
-  })
-}
-
 
 module "polybot" {
   source               = "./modules/polybot"

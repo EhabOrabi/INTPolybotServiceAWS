@@ -31,7 +31,7 @@ resource "aws_instance" "polybot_instance2" {
   }
 }
 
-# IAM Role and Policies
+# IAM Role
 resource "aws_iam_role" "polybot_service_role" {
   name = var.iam_role_name
 
@@ -45,18 +45,25 @@ resource "aws_iam_role" "polybot_service_role" {
       Action = "sts:AssumeRole"
     }]
   })
-   lifecycle {
-    ignore_changes = [name]
+
+  lifecycle {
+    ignore_changes = [
+      # List attributes to ignore changes for
+      assume_role_policy,
+      tags,
+    ]
   }
 }
 
+# IAM Role Policy Attachments
 resource "aws_iam_role_policy_attachment" "dynamodb_full_access" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+
   lifecycle {
     ignore_changes = [
-      # Ignore policy ARN changes if it's updated externally
-      policy_arn
+      # Ignore changes to policy_arn
+      policy_arn,
     ]
   }
 }
@@ -64,10 +71,11 @@ resource "aws_iam_role_policy_attachment" "dynamodb_full_access" {
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+
   lifecycle {
     ignore_changes = [
-      # Ignore policy ARN changes if it's updated externally
-      policy_arn
+      # Ignore changes to policy_arn
+      policy_arn,
     ]
   }
 }
@@ -75,10 +83,11 @@ resource "aws_iam_role_policy_attachment" "s3_full_access" {
 resource "aws_iam_role_policy_attachment" "sqs_full_access" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+
   lifecycle {
     ignore_changes = [
-      # Ignore policy ARN changes if it's updated externally
-      policy_arn
+      # Ignore changes to policy_arn
+      policy_arn,
     ]
   }
 }
@@ -86,22 +95,27 @@ resource "aws_iam_role_policy_attachment" "sqs_full_access" {
 resource "aws_iam_role_policy_attachment" "secrets_manager_rw" {
   role       = aws_iam_role.polybot_service_role.name
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+
   lifecycle {
     ignore_changes = [
-      # Ignore policy ARN changes if it's updated externally
-      policy_arn
+      # Ignore changes to policy_arn
+      policy_arn,
     ]
   }
 }
 
-
+# IAM Instance Profile
 resource "aws_iam_instance_profile" "polybot_instance_profile" {
   name = var.iam_role_name
   role = aws_iam_role.polybot_service_role.name
-    lifecycle {
-    ignore_changes = [role]
+
+  lifecycle {
+    ignore_changes = [
+      role,
+    ]
   }
 }
+
 
 # Security Group
 resource "aws_security_group" "polybot_sg" {
