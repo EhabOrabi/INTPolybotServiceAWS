@@ -14,7 +14,7 @@ on:
 
 jobs:
   us-east-2:
-    if: ${{ github.event.inputs.us-east-2 == 'true' }}
+    if: ${{ github.event.inputs['us-east-2'] == 'true' }}
     uses: ./.github/workflows/infra-provisioning-region.yaml
     with:
       region-code: us-east-2
@@ -24,7 +24,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.US_EAST_2_AWS_SECRET_ACCESS_KEY }}
 
   eu-west-3:
-    if: ${{ github.event.inputs.eu-west-3 == 'true' }}
+    if: ${{ github.event.inputs['eu-west-3'] == 'true' }}
     uses: ./.github/workflows/infra-provisioning-region.yaml
     with:
       region-code: eu-west-3
