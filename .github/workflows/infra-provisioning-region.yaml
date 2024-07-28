@@ -6,6 +6,9 @@ on:
       region-code:
         required: true
         type: string
+      tfvars-file:
+        required: true
+        type: string
     secrets:
       TELEGRAM_TOKEN:
         required: true
@@ -39,7 +42,7 @@ jobs:
         working-directory: tf
 
       - name: Apply Terraform
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var-file=${{ inputs.tfvars-file }}
         working-directory: tf
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
