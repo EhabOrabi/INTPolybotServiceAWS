@@ -36,8 +36,10 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
+        working-directory: ./path/to/your/terraform/config
 
       - name: Apply Terraform
         run: terraform apply -auto-approve
+        working-directory: tf
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
