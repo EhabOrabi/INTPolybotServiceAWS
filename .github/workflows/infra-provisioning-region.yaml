@@ -36,7 +36,7 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
-        working-directory: ./path/to/your/terraform/config
+        working-directory: tf
 
       - name: Apply Terraform
         run: terraform apply -auto-approve
