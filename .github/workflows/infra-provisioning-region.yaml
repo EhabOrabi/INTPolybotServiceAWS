@@ -20,7 +20,11 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        region:
+          - us-east-2
+          - eu-west-3
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -42,7 +46,7 @@ jobs:
         working-directory: tf
 
       - name: Select or Create Terraform Workspace
-        run: terraform workspace select ${{ inputs.region-code }} || terraform workspace new ${{ inputs.region-code }}
+        run: terraform workspace select ${{ matrix.region }}  || terraform workspace new ${{ matrix.region }}
         working-directory: tf
 
 
