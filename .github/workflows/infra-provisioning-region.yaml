@@ -41,8 +41,8 @@ jobs:
         run: terraform init
         working-directory: tf
 
-      - name: Terraform Work Space
-        run: terraform workspace select ${{ matrix.region }} || terraform workspace new ${{ matrix.region }}
+      - name: Select or Create Terraform Workspace
+        run: terraform workspace select ${{ inputs.region-code }} || terraform workspace new ${{ inputs.region-code }}
         working-directory: tf
 
 
