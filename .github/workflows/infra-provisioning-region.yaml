@@ -20,6 +20,7 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -40,10 +41,12 @@ jobs:
         run: terraform init
         working-directory: tf
 
+      - name: Select or Create Terraform Workspace
+        run: terraform workspace select ${{ inputs.region-code }} || terraform workspace new ${{ inputs.region-code }}
+        working-directory: tf
+
       - name: Apply Terraform
-        run:
-          terraform workspace select ${{ matrix.region }}  || terraform workspace new ${{ matrix.region }}
-          terraform destroy -auto-approve -var-file=region.${{ matrix.region }}.tfvars
+        run: terraform apply -auto-approve -var-file=${{ inputs.tfvars-file }}
         working-directory: tf
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
