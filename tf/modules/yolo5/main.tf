@@ -151,8 +151,6 @@ resource "aws_dynamodb_table" "PolybotService-DynamoDB" {
 }
 
 resource "aws_iam_role" "yolo5_role" {
-  count = data.aws_iam_role.existing_yolo5_role.id == "" ? 1 : 0
-
   name = var.iam_role_name
 
   assume_role_policy = jsonencode({
@@ -170,10 +168,6 @@ resource "aws_iam_role" "yolo5_role" {
     lifecycle {
     ignore_changes = [name]
   }
-}
-data "aws_iam_role" "existing_yolo5_role" {
-  name = "ehabo-role-yolo5-tf"
-  ignore_errors = true
 }
 
 resource "aws_iam_role_policy_attachment" "dynamodb_policy" {
