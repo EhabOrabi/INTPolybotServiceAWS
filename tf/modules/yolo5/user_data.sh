@@ -24,14 +24,13 @@ apt-get install awscli
 region=$(aws configure get region 2>/dev/null)
 # Check if the region is eu-west-3 and run the corresponding command
 
+   sudo docker pull ehab215/yolo5
+   sudo docker run --name yolo5 -p 8443:8443 ehab215/yolo5:latest
+
 if [ "$region" == "eu-west-3" ]; then
    # need to run container for paris
    echo "Region is eu-west-3, running command..."
-   sudo docker pull ehab215/polybot_region.eu-west-3
-   sudo docker run --name polybot -p 8443:8443 ehab215/yolo5_region_eu-west-3:latest
 else
   # need to run container for Ohio
   echo "Region is not eu-west-3, running another command..."
-  sudo docker pull ehab215/yolo5_region.us-east-2:latest
-  sudo docker run --name polybot -p 8443:8443 ehab215/yolo5_region.us-east-2:latest
 fi

@@ -28,14 +28,13 @@ region=$(aws configure get region 2>/dev/null)
 # Add current user to the docker group
 sudo usermod -aG docker $USER
 
+sudo docker pull ehab215/polybot
+sudo docker run --name polybot -p 8443:8443 ehab215/polybot:latest
+
 if [ "$region" == "eu-west-3" ]; then
    # need to run container for paris
    echo "Region is eu-west-3, running command..."
-   sudo docker pull ehab215/polybot_region.eu-west-3
-   sudo docker run --name polybot -p 8443:8443 ehab215/polybot_region.eu-west-3:latest
 else
   # need to run container for Ohio
   echo "Region is not eu-west-3, running another command..."
-  sudo docker pull ehab215/polybot_region.us-east-2:latest
-  sudo docker run --name polybot -p 8443:8443 ehab215/polybot_region.us-east-2:latest
 fi
