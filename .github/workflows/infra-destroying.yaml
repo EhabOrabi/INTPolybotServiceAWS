@@ -17,9 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region:
-          - us-east-2
-          - eu-west-3
+        region: [us-east-2, eu-west-3]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -46,7 +45,7 @@ jobs:
         run: terraform init
 
       - name: Select Workspace and Destroy Infrastructure
-        if: ${{ github.event.inputs[matrix.region] == 'true' }}
+        if: ${{ github.event.inputs[matrix.region] }}
         working-directory: tf
         run: |
           terraform workspace select ${{ matrix.region }} || terraform workspace new ${{ matrix.region }}
