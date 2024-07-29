@@ -13,4 +13,4 @@ REGION=${AVAILABILITY_ZONE%?}
 export REGION_NAME=$REGION
 export BUCKET_NAME="ehaborabi-bucket-$REGION-tf"
 export TELEGRAM_APP_URL="https://ehabo-polybot-$REGION.int-devops.click"
-export SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-.$REGION.-tf"
+export SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-$REGION-tf"
