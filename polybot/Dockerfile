@@ -15,7 +15,5 @@ RUN chmod +x /usr/src/app/get_current_region.sh
 RUN chmod +x /usr/src/app/start.sh
 # Set default environment variables
 
-ENV SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-tf"
-
 # Run the start script
 CMD ["/usr/src/app/start.sh"]

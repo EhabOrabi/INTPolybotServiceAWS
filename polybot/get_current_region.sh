@@ -15,9 +15,4 @@ export REGION_NAME=$REGION
 export BUCKET_NAME="ehaborabi-bucket-$REGION-tf"
 export TELEGRAM_APP_URL="https://ehabo-polybot-$REGION.int-devops.click"
 export SQS_QUEUE_URL="https://sqs.$REGION_NAME.amazonaws.com/019273956931/ehabo-PolybotServiceQueue-tf"
-
-
-#echo "Region: $REGION"
-#echo "SQS Queue URL: $SQS_QUEUE_URL"
-#echo "Bucket Name: $BUCKET_NAME"
-#echo "Telegram App Url: $TELEGRAM_APP_URL"
+export SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-.$REGION.-tf"
