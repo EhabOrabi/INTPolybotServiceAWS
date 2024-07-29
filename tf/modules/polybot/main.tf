@@ -31,8 +31,15 @@ resource "aws_instance" "polybot_instance2" {
   }
 }
 
+data "aws_iam_role" "existing_polybot_role" {
+  name = "ehabo-polybot-role-tf"
+  ignore_errors = true
+}
+
 # IAM Role
 resource "aws_iam_role" "polybot_service_role" {
+  count = data.aws_iam_role.existing_polybot_role.id == "" ? 1 : 0
+
   name = var.iam_role_name
 
   assume_role_policy = jsonencode({
