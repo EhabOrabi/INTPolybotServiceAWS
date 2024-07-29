@@ -4,7 +4,7 @@
 . /usr/src/app/get_current_region.sh
 
 # Construct the SQS_QUEUE_URL dynamically
-export SQS_QUEUE_URL="https://sqs.$REGION_NAME.amazonaws.com/019273956931/ehabo-PolybotServiceQueue-tf"
+export SQS_QUEUE_URL="https://sqs.$REGION_NAME.amazonaws.com/019273956931/ehabo-PolybotServiceQueue-.$REGION_NAME-tf"
 export BUCKET_NAME="ehaborabi-bucket-$REGION-tf"
 export TELEGRAM_APP_URL="https://ehabo-polybot-$REGION.int-devops.click"
 export SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-.$REGION.-tf"
