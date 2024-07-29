@@ -268,7 +268,6 @@ resource "aws_lb_target_group_attachment" "polybot_instance2_attachment" {
 resource "aws_sqs_queue" "polybot_queue" {
   name = var.my_queue
   tags = {
-    Name      = "ehabo-PolybotServiceQueue-tf"
     Terraform = "true"
   }
 }

@@ -41,8 +41,14 @@ jobs:
         run: terraform init
         working-directory: tf
 
+      - name: Terraform Work Space
+        run: terraform workspace select ${{ matrix.region }} || terraform workspace new ${{ matrix.region }}
+        working-directory: tf
+
+
       - name: Apply Terraform
-        run: terraform apply -auto-approve -var-file=${{ inputs.tfvars-file }}
+        run:
+          terraform destroy -auto-approve -var-file=region.${{ matrix.region }}.tfvars
         working-directory: tf
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
