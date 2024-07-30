@@ -101,6 +101,7 @@ module "polybot" {
   iam_role_name         = var.iam_role_name_polybot
   certificate_arn       = var.certificate_arn
   my_queue              = var.my_queue
+  region = var.region
 }
 
 
@@ -119,4 +120,5 @@ module "yolo5" {
   cpu_utilization_low_threshold  = 30  # Example: Set your desired thresholds
   scale_out_cooldown         = 300  # Example: Set your cooldown periods
   scale_in_cooldown          = 300  # Example: Set your cooldown periods
+    region = var.region
 }
