@@ -104,18 +104,17 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_rw" {
   }
 }
 
-# IAM Instance Profile
-resource "aws_iam_instance_profile" "polybot_instance_profile" {
-  name = var.iam_role_name
-  role = aws_iam_role.polybot_service_role.name
+#IAMInstanceProfile
+resource"aws_iam_instance_profile""polybot_instance_profile"{
+  name="${var.iam_role_name}-${var.region}"
+  role=aws_iam_role.polybot_service_role.name
 
-  lifecycle {
-    ignore_changes = [
-      role,
-    ]
-  }
+    lifecycle{
+      ignore_changes=[
+        role,
+      ]
+    }
 }
-
 
 # Security Group
 resource "aws_security_group" "polybot_sg" {

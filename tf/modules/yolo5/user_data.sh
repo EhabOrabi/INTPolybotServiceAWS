@@ -24,7 +24,7 @@ apt-get install awscli
 region=$(aws configure get region 2>/dev/null)
 # Check if the region is eu-west-3 and run the corresponding command
 
-   sudo docker pull ehab215/yolo5
+   sudo docker pull ehab215/yolo5:latest
    sudo docker run --name yolo5 ehab215/yolo5:latest
 
 if [ "$region" == "eu-west-3" ]; then
