@@ -14,11 +14,6 @@ variable "availability_zone" {
   default = ""
 }
 
-variable "iam_role_name_polybot" {
-  description = "The name of the IAM role for the Polybot instance"
-  type        = string
-}
-
 variable "dynamodb_table_name" {
   description = "The name of the DynamoDB table"
   type        = string
