@@ -29,7 +29,6 @@ def consume():
     # The function runs in an infinite loop, continually polling the SQS queue for new messages.
     while True:
         # Receive Message from SQS
-        logger.info(f"Queue URL from yolo5: {queue_name}")
         response = sqs_client.receive_message(QueueUrl=queue_name, MaxNumberOfMessages=1, WaitTimeSeconds=5)
         # Check for Messages:
         if 'Messages' in response:

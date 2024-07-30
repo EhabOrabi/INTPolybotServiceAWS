@@ -10,7 +10,8 @@ export TELEGRAM_APP_URL="https://ehabo-polybot2-$REGION.int-devops.click"
 export SQS_QUEUE_NAME="ehabo-PolybotServiceQueue-$REGION-tf"
 
 # Print the region and SQS_QUEUE_URL to verify
-echo "Using region: #$REGION_NAME#"
+echo "Using region1: #$REGION_NAME#"
+echo "Using region2: #$REGION#"
 echo "SQS Queue URL: #$SQS_QUEUE_URL#"
 echo "Bucket Name: #$BUCKET_NAME#"
 echo "Telegram App Url: #$TELEGRAM_APP_URL#"
