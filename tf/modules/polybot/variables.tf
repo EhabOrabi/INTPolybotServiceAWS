@@ -32,8 +32,3 @@ variable "certificate_arn" {
   description = "certificate arn"
   type        = string
 }
-
-variable "region" {
-  description = "region for polybot"
-  type        = string
-}
