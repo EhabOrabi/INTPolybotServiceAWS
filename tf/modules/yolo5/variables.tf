@@ -11,7 +11,6 @@ variable "instance_type_yolo5" {
 variable "iam_role_name" {
   description = "Iam Role name for the instance"
   type = string
-  default = "ehabo-role-yolo5-tf"
 }
 variable "key_pair_name_yolo5" {
   description = "Key pair name for SSH access."
