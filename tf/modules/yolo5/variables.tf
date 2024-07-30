@@ -61,6 +61,10 @@ variable "iam_instance_profile_name" {
   default = ""
 }
 
+variable "region" {
+  description = "region for yolo5"
+  type = string
+}
 
 variable "cpu_utilization_high_threshold" {
   description = "High CPU utilization threshold for scaling out"

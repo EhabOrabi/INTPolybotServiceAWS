@@ -106,9 +106,8 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_rw" {
 
 # IAM Instance Profile
 resource "aws_iam_instance_profile" "polybot_instance_profile" {
-  name = var.iam_role_name
+  name =  "polybot-instance-profile-${var.region}"
   role = aws_iam_role.polybot_service_role.name
-
   lifecycle {
     ignore_changes = [
       role,
