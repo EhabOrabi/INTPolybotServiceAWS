@@ -8,6 +8,6 @@ instance_ami_yolo5 = "ami-09d83d8d719da9808"
 instance_type_yolo5 = "t2.medium"
 key_pair_name_yolo5 = "ehabo-key-paris"
 bucket_name = "ehaborabi-bucket-eu-west-3-tf"
-certificate_arn   = "arn:aws:acm:eu-west-3:019273956931:certificate/c2da38e7-f3bc-47c9-8083-414010e74e3d"
+certificate_arn   = "arn:aws:acm:eu-west-3:019273956931:certificate/9e5b1449-66d6-4a2a-bd43-20ce9e32f1a9"
 
 
